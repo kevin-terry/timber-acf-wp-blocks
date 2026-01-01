@@ -1,5 +1,7 @@
 # Block Parameters
+
 When creating blocks, you can include any of the following parameters.
+
 ```twig
 {#
  Title: (required)
@@ -23,6 +25,7 @@ When creating blocks, you can include any of the following parameters.
  SupportsFullHeight: (true:false)
  SupportsJSX: (true|false)
  Example: (JSON format)
+ ExampleImage: (path or URL)
  Parent: (space-separated)
  DefaultData:
 #}

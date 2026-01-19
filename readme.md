@@ -6,14 +6,17 @@
 
 Generate ACF Gutenberg blocks just by adding templates to your Timber theme. This package is based heavily on [this article](https://medium.com/nicooprat/acf-blocks-avec-gutenberg-et-sage-d8c20dab6270) by [nicoprat](https://github.com/nicooprat) and the [plugin](https://github.com/MWDelaney/sage-acf-wp-blocks) by [MWDelaney](https://github.com/MWDelaney).
 
+**Now with ACF Blocks API v3 support** — automatic `block.json` generation, modern block registration, and full compatibility with the latest ACF PRO 6.6+.
+
 ## Complete documentation
 
 [Read the complete documentation](https://palmiak.github.io/timber-acf-wp-blocks/#/)
 
 ## Contributors
 
-This plugin is build with help of contributors:
+This plugin is built with help of contributors:
 
+- [Kevin Terry](https://github.com/kevinterry) — block.json generation, API v3 support
 - [roylodder](https://github.com/roylodder)
 - [BrentWMiller](https://github.com/BrentWMiller)
 - [Marcin Krzemiński](https://github.com/marcinkrzeminski)
@@ -23,7 +26,14 @@ This plugin is build with help of contributors:
 
 ## Creating blocks
 
-Add twig templates to `views/blocks` which get and use ACF data. Each template requires a comment block with some data in it:
+Create a subfolder in `views/blocks` with a matching Twig template. The plugin auto-generates `block.json` from your template headers:
+
+```
+views/blocks/testimonial/
+├── testimonial.twig
+├── block.json (auto-generated)
+└── example.png (optional preview image)
+```
 
 ```twig
 {#
@@ -31,14 +41,9 @@ Add twig templates to `views/blocks` which get and use ACF data. Each template r
   Description: Customer testimonial
   Category: formatting
   Icon: admin-comments
-  Keywords: testimonial quote "customer testimonial"
-  Mode: edit
-  Align: left
-  PostTypes: page post
+  Keywords: testimonial quote
+  Mode: preview
   SupportsAlign: left right
-  SupportsMode: false
-  SupportsMultiple: false
-  ExampleImage: assets/block-previews/testimonial.png
 #}
 
 <blockquote data-{{ block.id }}>

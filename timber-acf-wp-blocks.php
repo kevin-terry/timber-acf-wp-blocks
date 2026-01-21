@@ -12,6 +12,13 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 	class Timber_Acf_Wp_Blocks
 	{
 		/**
+		 * Tracks blocks using flat file structure for admin notice.
+		 *
+		 * @var array
+		 */
+		private static $flat_structure_blocks = array();
+
+		/**
 		 * Constructor
 		 */
 		public function __construct()
@@ -22,6 +29,8 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 				&& class_exists('Timber')
 			) {
 				add_action('acf/init', array(__CLASS__, 'timber_block_init'), 10, 0);
+				add_action('admin_init', array(__CLASS__, 'handle_flat_structure_notice_dismiss'));
+				add_action('admin_notices', array(__CLASS__, 'show_flat_structure_notice'));
 			} elseif (is_callable('add_action')) {
 				add_action(
 					'admin_notices',
@@ -912,23 +921,71 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		}
 
 		/**
-		 * Trigger deprecation warning for flat file structure.
+		 * Track a block using flat file structure for admin notice.
 		 *
 		 * @param string $slug Block slug.
 		 */
 		public static function trigger_flat_structure_deprecation($slug)
 		{
-			if (defined('WP_DEBUG') && WP_DEBUG) {
-				$message = sprintf(
-					'Timber ACF Blocks: Block "%s" uses flat file structure which is deprecated. ' .
-						'Consider migrating to subfolder structure: views/blocks/%s/%s.twig with block.json. ' .
-						'See documentation for migration guide.',
-					$slug,
-					$slug,
-					$slug
-				);
-				trigger_error($message, E_USER_DEPRECATED);
+			self::$flat_structure_blocks[] = $slug;
+		}
+
+		/**
+		 * Handle dismissal of flat structure notice.
+		 */
+		public static function handle_flat_structure_notice_dismiss()
+		{
+			if (
+				isset($_GET['timber_dismiss_flat_notice']) &&
+				$_GET['timber_dismiss_flat_notice'] === '1' &&
+				current_user_can('manage_options')
+			) {
+				check_admin_referer('timber_dismiss_flat_notice');
+
+				// Get current flat blocks and mark them as dismissed
+				$dismissed = get_option('timber_blocks_dismissed_flat_slugs', array());
+				$dismissed = array_unique(array_merge($dismissed, self::$flat_structure_blocks));
+				update_option('timber_blocks_dismissed_flat_slugs', $dismissed);
+
+				// Redirect to remove query string
+				wp_safe_redirect(remove_query_arg(array('timber_dismiss_flat_notice', '_wpnonce')));
+				exit;
 			}
+		}
+
+		/**
+		 * Show admin notice for blocks using flat file structure.
+		 */
+		public static function show_flat_structure_notice()
+		{
+			// Only show in debug mode and to admins
+			if (! defined('WP_DEBUG') || ! WP_DEBUG || ! current_user_can('manage_options')) {
+				return;
+			}
+
+			// Get dismissed blocks
+			$dismissed = get_option('timber_blocks_dismissed_flat_slugs', array());
+
+			// Filter out already dismissed blocks
+			$new_flat_blocks = array_diff(self::$flat_structure_blocks, $dismissed);
+
+			if (empty($new_flat_blocks)) {
+				return;
+			}
+
+			$dismiss_url = wp_nonce_url(
+				add_query_arg('timber_dismiss_flat_notice', '1'),
+				'timber_dismiss_flat_notice'
+			);
+
+			$block_list = '<code>' . implode('</code>, <code>', array_map('esc_html', $new_flat_blocks)) . '</code>';
+
+			echo '<div class="notice notice-warning">';
+			echo '<p><strong>Timber ACF Blocks:</strong> The following blocks use the legacy flat file structure: ' . $block_list . '</p>';
+			echo '<p>Consider migrating to the subfolder structure with <code>block.json</code> for better performance and compatibility. ';
+			echo '<a href="https://palmiak.github.io/timber-acf-wp-blocks/#/block-json" target="_blank">View migration guide →</a></p>';
+			echo '<p><a href="' . esc_url($dismiss_url) . '">Dismiss this notice</a></p>';
+			echo '</div>';
 		}
 	}
 }

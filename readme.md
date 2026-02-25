@@ -18,7 +18,7 @@ Automatic `block.json` generation, modern block registration, and full compatibi
 
 This plugin is built with help of contributors:
 
-- [Kevin Terry](https://github.com/kevinterry) — block.json generation, API v3 support
+- [Kevin Terry](https://github.com/kevin-terry) — block.json generation, API v3 support
 - [roylodder](https://github.com/roylodder)
 - [BrentWMiller](https://github.com/BrentWMiller)
 - [Marcin Krzemiński](https://github.com/marcinkrzeminski)

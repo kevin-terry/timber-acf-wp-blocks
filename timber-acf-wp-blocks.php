@@ -19,6 +19,13 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		private static $flat_structure_blocks = array();
 
 		/**
+		 * Cache resolved block directories for the current request.
+		 *
+		 * @var array|null
+		 */
+		private static $cached_block_directories = null;
+
+		/**
 		 * Constructor
 		 */
 		public function __construct()
@@ -442,7 +449,7 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 			$context['post_id']       = $post_id;
 			$context['slug']          = $slug;
 			$context['is_preview']    = $is_preview;
-			$context['fields']        = \get_fields();
+			$context['fields']        = $is_example ? $block['data'] : \get_fields();
 			$context['inner_content'] = $content;
 			$context['wp_block']      = $wp_block;
 			$context['block_context'] = $block_context;
@@ -454,10 +461,6 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 			);
 
 			$context['classes'] = implode(' ', $classes);
-
-			if ($is_example) {
-				$context['fields'] = $block['data'];
-			}
 
 			$context = apply_filters('timber/acf-gutenberg-blocks-data', $context);
 			$context = apply_filters('timber/acf-gutenberg-blocks-data/' . $slug, $context);
@@ -518,13 +521,15 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 			$ret = array();
 
 			foreach ($directories as $base_directory) {
+				$base_path = \locate_template($base_directory);
+
 				// Check if the folder exist.
-				if (! file_exists(\locate_template($base_directory))) {
+				if (! $base_path || ! file_exists($base_path)) {
 					continue;
 				}
 
 				$template_directory = new RecursiveDirectoryIterator(
-					\locate_template($base_directory),
+					$base_path,
 					FilesystemIterator::KEY_AS_PATHNAME | FilesystemIterator::CURRENT_AS_SELF
 				);
 
@@ -545,6 +550,10 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 */
 		public static function timber_block_directory_getter()
 		{
+			if (is_array(self::$cached_block_directories)) {
+				return self::$cached_block_directories;
+			}
+
 			// Get an array of directories containing blocks.
 			$directories = apply_filters('timber/acf-gutenberg-blocks-templates', array('views/blocks'));
 
@@ -555,7 +564,9 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 				$directories = array_merge($directories, $subdirectories);
 			}
 
-			return $directories;
+			self::$cached_block_directories = $directories;
+
+			return self::$cached_block_directories;
 		}
 
 		/**

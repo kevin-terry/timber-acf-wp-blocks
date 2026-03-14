@@ -124,14 +124,35 @@
 
         .markdown-section pre code {
             color: #f4f8ff;
-            background: transparent;
+            background: transparent !important;
+            border: 0;
             text-shadow: none;
         }
 
-        .markdown-section:not(pre) > code {
-            color: #d9f2ff;
-            background: rgba(42, 51, 69, 0.6);
+        .markdown-section code {
+            color: #f2f8ff;
+            background: #273245;
+            border: 1px solid #3a4a63;
             border-radius: 4px;
+        }
+
+        .markdown-section table,
+        .markdown-section tr {
+            background: transparent !important;
+            border-color: var(--border) !important;
+        }
+
+        .markdown-section th,
+        .markdown-section td {
+            background: #1a202d !important;
+            color: var(--text) !important;
+            border-color: var(--border) !important;
+        }
+
+        .markdown-section table code {
+            color: #f2f8ff;
+            background: #273245;
+            border: 1px solid #3a4a63;
         }
 
         .token.comment,

@@ -64,6 +64,20 @@
 <body>
     <div id="app"></div>
     <script>
+        (function () {
+            var hash = window.location.hash;
+
+            // Normalize hash-root entries (e.g. /#/ or /#) to the base docs URL
+            // before Docsify initializes to prevent first-load 404 content flashes.
+            if (hash === '#/' || hash === '#') {
+                var path = window.location.pathname;
+                var normalizedPath = path.endsWith('/') ? path : path + '/';
+                var normalizedUrl = normalizedPath + window.location.search;
+                window.history.replaceState(null, '', normalizedUrl);
+            }
+        })();
+    </script>
+    <script>
         window.$docsify = {
             name: 'Timber ACF WP Blocks',
             repo: 'https://github.com/kevin-terry/timber-acf-wp-blocks',

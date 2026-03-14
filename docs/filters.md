@@ -45,10 +45,13 @@ add_filter( 'timber/acf-gutenberg-blocks-templates', function () {
 You can add or change data to the Timber context of all your blocks using the
 `timber/acf-gutenberg-blocks-data` filter.
 
+The context includes `fields`, `block`, `classes`, `is_preview`, `post_id`, `slug`, `wp_block`, `block_context`, and `inner_content`.
+
 ```php
 <?php
 add_filter( 'timber/acf-gutenberg-blocks-data', function( $context ){
 	$context['fields']['extra_data'] = 'New extra data';
+    $context['has_inner_content']    = ! empty( $context['inner_content'] );
 
 	return $context;
 } );

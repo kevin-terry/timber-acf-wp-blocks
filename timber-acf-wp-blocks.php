@@ -443,6 +443,7 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 			$context['slug']          = $slug;
 			$context['is_preview']    = $is_preview;
 			$context['fields']        = \get_fields();
+			$context['inner_content'] = $content;
 			$context['wp_block']      = $wp_block;
 			$context['block_context'] = $block_context;
 			$classes               = array_merge(
@@ -593,11 +594,15 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 */
 		public static function should_auto_generate_json()
 		{
-			$default = defined('TIMBER_BLOCKS_AUTO_GENERATE')
-				? TIMBER_BLOCKS_AUTO_GENERATE
-				: (defined('WP_DEBUG') && WP_DEBUG);
+			if (defined('TIMBER_BLOCKS_AUTO_GENERATE')) {
+				$default = (bool) constant('TIMBER_BLOCKS_AUTO_GENERATE');
+			} else {
+				$default = defined('WP_DEBUG')
+					? (bool) constant('WP_DEBUG')
+					: false;
+			}
 
-			return apply_filters('timber/acf-gutenberg-blocks-auto-generate-json', $default);
+			return (bool) apply_filters('timber/acf-gutenberg-blocks-auto-generate-json', $default);
 		}
 
 		/**

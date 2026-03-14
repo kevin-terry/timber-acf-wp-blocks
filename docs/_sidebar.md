@@ -1,4 +1,4 @@
-- [About](/)
+- [About](home.md)
 - [Installation](installation.md)
 - [Demonstration](example.md)
 - [Parameters](parameters.md)

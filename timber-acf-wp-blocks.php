@@ -999,7 +999,7 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 			echo '<div class="notice notice-warning">';
 			echo '<p><strong>Timber ACF Blocks:</strong> The following blocks use the legacy flat file structure: ' . $block_list . '</p>';
 			echo '<p>Consider migrating to the subfolder structure with <code>block.json</code> for better performance and compatibility. ';
-			echo '<a href="https://palmiak.github.io/timber-acf-wp-blocks/#/block-json" target="_blank">View migration guide →</a></p>';
+			echo '<a href="https://kevin-terry.github.io/timber-acf-wp-blocks/#/block-json" target="_blank">View migration guide →</a></p>';
 			echo '<p><a href="' . esc_url($dismiss_url) . '">Dismiss this notice</a></p>';
 			echo '</div>';
 		}

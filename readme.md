@@ -12,7 +12,8 @@ Automatic `block.json` generation, modern block registration, and full compatibi
 
 ## Complete documentation
 
-[Read the complete documentation](https://palmiak.github.io/timber-acf-wp-blocks/#/)
+- [Hosted docs (with sidebar)](https://kevin-terry.github.io/timber-acf-wp-blocks/#/)
+- [Browse docs in this repository](docs/home.md)
 
 ## Contributors
 

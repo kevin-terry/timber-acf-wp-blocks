@@ -17,14 +17,55 @@
             --border: #2a3345;
         }
 
+        html,
         body {
-            background: radial-gradient(circle at 20% -10%, #202a3d 0%, var(--page-bg) 40%);
+            min-height: 100%;
+        }
+
+        body {
+            background: transparent;
             color: var(--text);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(circle at 20% -10%, #202a3d 0%, var(--page-bg) 40%);
+            pointer-events: none;
         }
 
         .sidebar {
             background: linear-gradient(180deg, #161d2a 0%, var(--sidebar-bg) 100%);
             border-right: 1px solid var(--border);
+        }
+
+        .sidebar-toggle {
+            background: var(--sidebar-bg);
+            border-top: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            border-top-right-radius: 12px;
+            box-shadow: none;
+        }
+
+        .sidebar-toggle-button {
+            padding: 10px 12px;
+        }
+
+        .sidebar-toggle span {
+            background-color: var(--accent);
+        }
+
+        body:not(.close) .sidebar-toggle {
+            width: var(--sidebar-width, 300px);
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+        }
+
+        body:not(.close) .sidebar-toggle-button {
+            background: transparent;
         }
 
         .markdown-section {
@@ -44,11 +85,30 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             background: var(--surface);
+            border-bottom: 1px solid var(--border) !important;
+            box-shadow: none !important;
+        }
+
+        .search::before,
+        .search::after {
+            display: none !important;
         }
 
         .search input {
             color: var(--text);
             background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-shadow: none !important;
+            outline: none !important;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .search input:focus {
+            border-color: var(--border) !important;
+            box-shadow: none !important;
+            outline: none !important;
         }
 
         .search input::placeholder {
@@ -56,8 +116,75 @@
         }
 
         .markdown-section pre {
+            background: #16181d;
             border: 1px solid var(--border);
             border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .markdown-section pre code {
+            color: #f4f8ff;
+            background: transparent;
+            text-shadow: none;
+        }
+
+        .markdown-section:not(pre) > code {
+            color: #d9f2ff;
+            background: rgba(42, 51, 69, 0.6);
+            border-radius: 4px;
+        }
+
+        .token.comment,
+        .token.prolog,
+        .token.doctype,
+        .token.cdata {
+            color: #8ea4c8;
+        }
+
+        .token.punctuation {
+            color: #e7eefc;
+        }
+
+        .token.property,
+        .token.tag,
+        .token.constant,
+        .token.symbol,
+        .token.deleted {
+            color: #7ee3ff;
+        }
+
+        .token.boolean,
+        .token.number {
+            color: #ffd27a;
+        }
+
+        .token.selector,
+        .token.attr-name,
+        .token.string,
+        .token.char,
+        .token.builtin,
+        .token.inserted {
+            color: #9ff7b8;
+        }
+
+        .token.operator,
+        .token.entity,
+        .token.url,
+        .language-css .token.string,
+        .style .token.string {
+            color: #ffb0d9;
+            background: transparent;
+        }
+
+        .token.atrule,
+        .token.attr-value,
+        .token.keyword {
+            color: #8ec2ff;
+        }
+
+        .token.function,
+        .token.class-name {
+            color: #ffd58f;
         }
     </style>
 </head>

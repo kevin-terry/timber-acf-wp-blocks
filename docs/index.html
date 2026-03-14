@@ -5,7 +5,61 @@
   <title>Timber ACF WP Blocks</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+  <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/dark.css">
+  <style>
+    :root {
+      --accent: #14bbb1;
+      --page-bg: #0f1218;
+      --sidebar-bg: #151a23;
+      --surface: #1a2030;
+      --text: #e5ebf5;
+      --muted: #a5b2c7;
+      --border: #2a3345;
+    }
+
+    body {
+      background: radial-gradient(circle at 20% -10%, #202a3d 0%, var(--page-bg) 40%);
+      color: var(--text);
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, #161d2a 0%, var(--sidebar-bg) 100%);
+      border-right: 1px solid var(--border);
+    }
+
+    .markdown-section {
+      max-width: 980px;
+      color: var(--text);
+    }
+
+    .markdown-section a,
+    .app-name-link,
+    .sidebar-nav a {
+      color: var(--accent);
+    }
+
+    .search {
+      margin: 10px 12px;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .search input {
+      color: var(--text);
+      background: transparent;
+    }
+
+    .search input::placeholder {
+      color: var(--muted);
+    }
+
+    .markdown-section pre {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+  </style>
 </head>
 <body>
   <div id="app"></div>

@@ -605,6 +605,15 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 */
 		public static function should_auto_generate_json()
 		{
+			// Safety guard: never auto-generate files on production.
+			if (function_exists('wp_get_environment_type') && wp_get_environment_type() === 'production') {
+				return false;
+			}
+
+			if (! function_exists('wp_get_environment_type') && defined('WP_ENVIRONMENT_TYPE') && WP_ENVIRONMENT_TYPE === 'production') {
+				return false;
+			}
+
 			if (defined('TIMBER_BLOCKS_AUTO_GENERATE')) {
 				$default = (bool) constant('TIMBER_BLOCKS_AUTO_GENERATE');
 			} else {

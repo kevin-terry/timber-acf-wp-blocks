@@ -41,7 +41,10 @@ When using the subfolder structure, the plugin can automatically generate and ma
 
 Auto-generation is controlled by a priority chain:
 
-1. **Filter** (highest priority):
+1. **Production safety guard** (highest priority):
+   If `wp_get_environment_type()` (or `WP_ENVIRONMENT_TYPE`) is `production`, auto-generation is always disabled.
+
+2. **Filter**:
 
 ```php
 add_filter('timber/acf-gutenberg-blocks-auto-generate-json', function($enabled) {
@@ -49,14 +52,14 @@ add_filter('timber/acf-gutenberg-blocks-auto-generate-json', function($enabled) 
 });
 ```
 
-2. **Constant** (if filter not set):
+3. **Constant** (if filter not set):
 
 ```php
 // In wp-config.php or functions.php
 define('TIMBER_BLOCKS_AUTO_GENERATE', true);
 ```
 
-3. **WP_DEBUG** (default fallback):
+4. **WP_DEBUG** (default fallback):
    If neither filter nor constant is defined, auto-generation follows `WP_DEBUG`.
 
 ### The `_generatedFromTwig` Flag

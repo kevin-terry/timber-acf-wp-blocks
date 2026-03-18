@@ -12,7 +12,8 @@ add_filter( 'timber/acf-gutenberg-blocks-auto-generate-json', function ( $enable
 } );
 ```
 
-By default, auto-generation follows `WP_DEBUG`, or you can set the `TIMBER_BLOCKS_AUTO_GENERATE` constant.
+Auto-generation is always disabled in `production` environments (`wp_get_environment_type()` or `WP_ENVIRONMENT_TYPE`).
+Outside production, it follows `WP_DEBUG`, or you can set the `TIMBER_BLOCKS_AUTO_GENERATE` constant.
 See [Block.json Support](block-json.md) for more details.
 
 ## Example Image Filenames

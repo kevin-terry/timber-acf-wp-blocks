@@ -177,6 +177,7 @@ Or rely on the `WP_DEBUG` default (auto-generation only when debugging).
 | EnqueueScript           | `script` / `editorScript`   |
 | Example                 | `example`                   |
 | ExampleImage            | `acf.exampleImage` (custom) |
+| HideSidebarFields       | `acf.hideFieldsInSidebar`   |
 
 ### Custom Extensions
 
@@ -220,6 +221,16 @@ add_filter('timber/acf-gutenberg-blocks-example-filenames', function($filenames)
     return ['block-example.png', 'example.png'];
 });
 ```
+
+#### Hide Fields In Sidebar
+
+`HideSidebarFields` maps directly to ACF's `hideFieldsInSidebar` setting.
+
+```twig
+{# HideSidebarFields: true #}
+```
+
+Use `true` or `false` (same convention as other boolean Twig headers).
 
 ## API Version
 

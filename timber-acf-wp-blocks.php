@@ -218,6 +218,7 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 					'example'                    => 'Example',
 					'example_image'              => 'ExampleImage',
 					'supports_jsx'               => 'SupportsJSX',
+					'hide_sidebar_fields'        => 'HideSidebarFields',
 					'parent'                     => 'Parent',
 					'ancestor'                   => 'Ancestor',
 					'uses_context'               => 'UsesContext',
@@ -818,6 +819,11 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 			// Enqueue assets callback (ACF specific)
 			if (! empty($file_headers['enqueue_assets'])) {
 				$block_json['acf']['enqueueAssets'] = $file_headers['enqueue_assets'];
+			}
+
+			// Hide fields in sidebar (ACF specific).
+			if (! empty($file_headers['hide_sidebar_fields'])) {
+				$block_json['acf']['hideFieldsInSidebar'] = ('true' === $file_headers['hide_sidebar_fields']);
 			}
 
 			// Example image (custom extension for static preview)

@@ -23,6 +23,9 @@ When creating blocks, you can include any of the following parameters.
  SupportsMultiple: (true|false)
  SupportsReusable: (true|false)
  SupportsFullHeight: (true|false)
+ SupportsHtml: (true|false)
+ SupportsInserter: (true|false)
+ SupportsLock: (true|false)
  SupportsJSX: (true|false)
  HideSidebarFields: (true|false)
  AutoInlineEditing: (true|false)
@@ -35,6 +38,20 @@ When creating blocks, you can include any of the following parameters.
  DefaultData:
 #}
 ```
+
+## Additional Support Flags
+
+### SupportsHtml
+
+Controls whether the block can be edited as raw HTML in the editor.
+
+### SupportsInserter
+
+Controls whether the block appears in the inserter UI.
+
+### SupportsLock
+
+Controls whether users can change the block lock setting from the editor UI.
 
 ## Block Hierarchy
 

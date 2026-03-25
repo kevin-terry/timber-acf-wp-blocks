@@ -30,7 +30,7 @@ This plugin is built with help of contributors:
 
 Create a subfolder in `views/blocks` with a matching Twig template. The plugin auto-generates `block.json` from your template headers:
 
-```
+```txt
 views/blocks/testimonial/
 ├── testimonial.twig
 ├── block.json (auto-generated)

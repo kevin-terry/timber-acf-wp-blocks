@@ -124,7 +124,7 @@ views/blocks/my-block/my-block.twig
 
 Move your Twig file into its subfolder. If you have associated CSS/JS files, consider moving them too:
 
-```
+```txt
 views/blocks/my-block/
 ├── my-block.twig
 ├── my-block.css (optional)
@@ -181,6 +181,9 @@ Or rely on the `WP_DEBUG` default (auto-generation only when debugging).
 | SupportsCustomClassName | `supports.customClassName`  |
 | SupportsReusable        | `supports.reusable`         |
 | SupportsFullHeight      | `supports.fullHeight`       |
+| SupportsHtml            | `supports.html`             |
+| SupportsInserter        | `supports.inserter`         |
+| SupportsLock            | `supports.lock`             |
 | SupportsJSX             | `supports.jsx`              |
 | EnqueueStyle            | `style` / `editorStyle`     |
 | EnqueueScript           | `script` / `editorScript`   |
@@ -209,7 +212,7 @@ When this is set and the block is being previewed in the inserter, the image wil
 
 For the **subfolder structure**, you don't even need to specify the `ExampleImage` header! Simply place an `example.jpg` (or other format) in your block's folder:
 
-```
+```txt
 views/blocks/my-block/
 ├── my-block.twig
 ├── block.json

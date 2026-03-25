@@ -30,7 +30,7 @@ composer require "palmiak/timber-acf-wp-blocks-plugin"
 
 Create blocks in subfolders for automatic `block.json` generation:
 
-```
+```txt
 views/blocks/
 ├── my-block/
 │   └── my-block.twig
@@ -42,7 +42,7 @@ views/blocks/
 
 Flat file structure still works but will show deprecation warnings:
 
-```
+```txt
 views/blocks/
 ├── my-block.twig
 ├── another-block.twig

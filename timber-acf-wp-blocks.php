@@ -215,6 +215,9 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 					'supports_custom_class_name' => 'SupportsCustomClassName',
 					'supports_reusable'          => 'SupportsReusable',
 					'supports_full_height'       => 'SupportsFullHeight',
+					'supports_html'              => 'SupportsHtml',
+					'supports_inserter'          => 'SupportsInserter',
+					'supports_lock'              => 'SupportsLock',
 					'example'                    => 'Example',
 					'example_image'              => 'ExampleImage',
 					'supports_jsx'               => 'SupportsJSX',
@@ -318,6 +321,24 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 			if (! empty($file_headers['supports_full_height'])) {
 				$data['supports']['full_height'] =
 					('true' === $file_headers['supports_full_height']) ? true : false;
+			}
+
+			// If the SupportsHtml header is set in the template, control HTML editing.
+			if (! empty($file_headers['supports_html'])) {
+				$data['supports']['html'] =
+					('true' === $file_headers['supports_html']) ? true : false;
+			}
+
+			// If the SupportsInserter header is set in the template, control inserter visibility.
+			if (! empty($file_headers['supports_inserter'])) {
+				$data['supports']['inserter'] =
+					('true' === $file_headers['supports_inserter']) ? true : false;
+			}
+
+			// If the SupportsLock header is set in the template, control lock UI support.
+			if (! empty($file_headers['supports_lock'])) {
+				$data['supports']['lock'] =
+					('true' === $file_headers['supports_lock']) ? true : false;
 			}
 
 			// Gives a possibility to enqueue style. If not an absoulte URL than adds
@@ -788,6 +809,18 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 
 			if (! empty($file_headers['supports_full_height'])) {
 				$supports['fullHeight'] = ('true' === $file_headers['supports_full_height']);
+			}
+
+			if (! empty($file_headers['supports_html'])) {
+				$supports['html'] = ('true' === $file_headers['supports_html']);
+			}
+
+			if (! empty($file_headers['supports_inserter'])) {
+				$supports['inserter'] = ('true' === $file_headers['supports_inserter']);
+			}
+
+			if (! empty($file_headers['supports_lock'])) {
+				$supports['lock'] = ('true' === $file_headers['supports_lock']);
 			}
 
 			if (! empty($file_headers['supports_jsx'])) {

@@ -12,7 +12,7 @@ Automatic `block.json` generation, modern block registration, and full compatibi
 
 ## Complete documentation
 
-- [Read the documentation](https://kevin-terry.github.io/timber-acf-wp-blocks/#/home) to learn everything this package can do.
+- [Read the documentation](https://kevin-terry.github.io/timber-acf-wp-blocks/) to learn everything this package can do.
 
 ## Contributors
 

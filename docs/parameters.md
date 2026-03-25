@@ -25,6 +25,7 @@ When creating blocks, you can include any of the following parameters.
  SupportsFullHeight: (true|false)
  SupportsJSX: (true|false)
  HideSidebarFields: (true|false)
+ AutoInlineEditing: (true|false)
  Example: (JSON format)
  ExampleImage: (path or URL)
  Parent: (space-separated)

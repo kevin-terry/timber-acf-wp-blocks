@@ -2,11 +2,20 @@
 
 As of ACF PRO 6.6+, the recommended way to register ACF blocks is using `block.json` files. This plugin now supports automatic generation of `block.json` files from your Twig template headers.
 
+## API Version
+
+The plugin now registers blocks with:
+
+- WordPress Block API v3 (`apiVersion: 3`)
+- ACF Block Version 3 (`acf.blockVersion: 3`)
+
+Enables the latest features including iframe editor rendering.
+
 ## Structure Types
 
 ### Legacy Flat Structure (Deprecated)
 
-```
+```txt
 views/blocks/
 ├── my-block.twig
 ├── another-block.twig
@@ -16,7 +25,7 @@ This structure still works but will trigger a deprecation warning in debug mode.
 
 ### Modern Subfolder Structure (Recommended)
 
-```
+```txt
 views/blocks/
 ├── my-block/
 │   ├── my-block.twig
@@ -178,6 +187,7 @@ Or rely on the `WP_DEBUG` default (auto-generation only when debugging).
 | Example                 | `example`                   |
 | ExampleImage            | `acf.exampleImage` (custom) |
 | HideSidebarFields       | `acf.hideFieldsInSidebar`   |
+| AutoInlineEditing       | `acf.autoInlineEditing`     |
 
 ### Custom Extensions
 
@@ -226,17 +236,34 @@ add_filter('timber/acf-gutenberg-blocks-example-filenames', function($filenames)
 
 `HideSidebarFields` maps directly to ACF's `hideFieldsInSidebar` setting.
 
+> **Note:** Only applies to blocks using generated `block.json` files (the modern subfolder structure).
+
 ```twig
 {# HideSidebarFields: true #}
 ```
 
 Use `true` or `false` (same convention as other boolean Twig headers).
 
-## API Version
+#### Automatic Inline Editing
 
-The plugin now registers blocks with:
+`AutoInlineEditing` maps directly to ACF's `autoInlineEditing` setting.
 
-- WordPress Block API v3 (`apiVersion: 3`)
-- ACF Block Version 3 (`acf.blockVersion: 3`)
+> **Note:** Only applies to blocks using generated `block.json` files (the modern subfolder structure).
 
-This enables the latest features including iframe editor rendering.
+```twig
+{# AutoInlineEditing: true #}
+```
+
+Use `true` or `false` (same convention as other boolean Twig headers).
+
+Recommended usage:
+
+- Use `AutoInlineEditing: true` for simple blocks where a field value is rendered directly in one element.
+- Use `AutoInlineEditing: false` when templates have conditional logic or more complex field output.
+
+Common caveats:
+
+- Repeater and Flexible Content fields are not auto-inline-editable.
+- Fields that return arrays (for example image fields returning arrays) are often not auto-inline-editable without manual handling.
+
+When you need full control, keep auto inline editing disabled and use ACF's manual inline editing helper attributes in your render template.

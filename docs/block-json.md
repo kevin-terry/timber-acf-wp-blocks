@@ -189,9 +189,9 @@ Or rely on the `WP_DEBUG` default (auto-generation only when debugging).
 | HideSidebarFields       | `acf.hideFieldsInSidebar`   |
 | AutoInlineEditing       | `acf.autoInlineEditing`     |
 
-### Custom Extensions
+## Custom Extensions
 
-#### `acf.exampleImage`
+### Example Image
 
 This is a **non-standard extension** specific to this plugin. It allows you to display a static image instead of rendering the block when shown in the block inserter preview.
 
@@ -207,13 +207,13 @@ When this is set and the block is being previewed in the inserter, the image wil
 
 #### Auto-Detection of Example Images
 
-For the **subfolder structure**, you don't even need to specify the `ExampleImage` header! Simply place an `example.png` (or other format) in your block's folder:
+For the **subfolder structure**, you don't even need to specify the `ExampleImage` header! Simply place an `example.jpg` (or other format) in your block's folder:
 
 ```
 views/blocks/my-block/
 ├── my-block.twig
 ├── block.json
-└── example.png    ← Auto-detected!
+└── example.jpg    ← Auto-detected!
 ```
 
 Supported formats (checked in order):
@@ -232,7 +232,7 @@ add_filter('timber/acf-gutenberg-blocks-example-filenames', function($filenames)
 });
 ```
 
-#### Hide Fields In Sidebar
+### Hide Fields In Sidebar
 
 `HideSidebarFields` maps directly to ACF's `hideFieldsInSidebar` setting.
 
@@ -244,7 +244,7 @@ add_filter('timber/acf-gutenberg-blocks-example-filenames', function($filenames)
 
 Use `true` or `false` (same convention as other boolean Twig headers).
 
-#### Automatic Inline Editing
+### Automatic Inline Editing
 
 `AutoInlineEditing` maps directly to ACF's `autoInlineEditing` setting.
 

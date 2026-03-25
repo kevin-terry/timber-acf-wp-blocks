@@ -6,14 +6,13 @@
 
 Generate ACF Gutenberg blocks just by adding templates to your Timber theme. This package is based heavily on [this article](https://medium.com/nicooprat/acf-blocks-avec-gutenberg-et-sage-d8c20dab6270) by [nicoprat](https://github.com/nicooprat) and the [plugin](https://github.com/MWDelaney/sage-acf-wp-blocks) by [MWDelaney](https://github.com/MWDelaney).
 
-### ✨ Now supports ACF Blocks API v3
+### ✨ Block API v3 and ACF v3 support
 
 Automatic `block.json` generation, modern block registration, and full compatibility with ACF PRO 6.6+. Fully backwards compatible with existing flat file structures.
 
 ## Complete documentation
 
-- [Hosted docs (with sidebar)](https://kevin-terry.github.io/timber-acf-wp-blocks/)
-- [Browse docs in this repository](docs/home.md)
+- [Read the documentation](https://kevin-terry.github.io/timber-acf-wp-blocks/#home) to learn everything this package can do.
 
 ## Contributors
 

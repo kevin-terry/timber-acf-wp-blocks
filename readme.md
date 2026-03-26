@@ -14,6 +14,34 @@ Automatic `block.json` generation, modern block registration, and full compatibi
 
 - [Read the documentation](https://kevin-terry.github.io/timber-acf-wp-blocks/) to learn everything this package can do.
 
+## Installation
+
+This repository is an independently maintained fork with additional fixes and features that are not present in the original upstream package.
+
+The current Composer package name is still `palmiak/timber-acf-wp-blocks`, so you must add this fork as a VCS repository before requiring it:
+
+```json
+{
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/kevin-terry/timber-acf-wp-blocks"
+    }
+  ],
+  "require": {
+    "palmiak/timber-acf-wp-blocks": "dev-master"
+  }
+}
+```
+
+Or install it with Composer after adding the repository entry:
+
+```bash
+composer require palmiak/timber-acf-wp-blocks:dev-master
+```
+
+Warning: if you do not add the VCS repository entry for `https://github.com/kevin-terry/timber-acf-wp-blocks`, Composer may resolve the original upstream package instead of this fork.
+
 ## Contributors
 
 This plugin is built with help of contributors:

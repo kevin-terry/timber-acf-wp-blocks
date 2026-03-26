@@ -10,19 +10,33 @@ To use **Timber ACF WP Blocks** you will need:
 
 > **Note**: ACF PRO 5.8+ will still work with legacy flat file structure, but ACF PRO 6.6+ is recommended for block.json support.
 
-## Installation
+## Composer
 
-Run the following in your Timber-based theme directory
+This repository is an independently maintained fork with additional fixes and features that are not present in the original upstream package.
 
-```sh
-composer require "palmiak/timber-acf-wp-blocks"
+The current Composer package name is still `palmiak/timber-acf-wp-blocks`, so you must add this fork as a VCS repository before requiring it:
+
+```json
+{
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/kevin-terry/timber-acf-wp-blocks"
+    }
+  ],
+  "require": {
+    "palmiak/timber-acf-wp-blocks": "dev-master"
+  }
+}
 ```
 
-or if want to install it as a Plugin run:
+Or, after adding the vcs repository entry, you can run the following in your Timber-based project:
 
 ```sh
-composer require "palmiak/timber-acf-wp-blocks-plugin"
+composer require palmiak/timber-acf-wp-blocks:dev-master
 ```
+
+> **Warning**: If you do not add the VCS repository entry for `https://github.com/kevin-terry/timber-acf-wp-blocks`, Composer may resolve the original upstream package instead of this fork.
 
 ## Block Directory Structure
 

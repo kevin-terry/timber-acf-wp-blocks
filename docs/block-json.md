@@ -259,6 +259,8 @@ Use `true` or `false` (same convention as other boolean Twig headers).
 
 Use `true` or `false` (same convention as other boolean Twig headers).
 
+When this is enabled, Timber ACF WP Blocks automatically routes the block through an internal render-template shim so ACF can apply its inline-editing DOM pass. You do not need to manually set `renderTemplate` for Timber callback blocks.
+
 Recommended usage:
 
 - Use `AutoInlineEditing: true` for simple blocks where a field value is rendered directly in one element.
@@ -268,5 +270,28 @@ Common caveats:
 
 - Repeater and Flexible Content fields are not auto-inline-editable.
 - Fields that return arrays (for example image fields returning arrays) are often not auto-inline-editable without manual handling.
+
+### Restricting Inline-Editable Fields
+
+`InlineEditableFields` is a package-specific Twig header that lets you explicitly whitelist which field names should remain inline-editable.
+
+```twig
+{#
+  AutoInlineEditing: true
+  InlineEditableFields: heading body
+#}
+```
+
+Recommended usage:
+
+- Use `InlineEditableFields` when your block mixes text fields with image, link, select, or other non-text values.
+- Prefer whitelisting only the text fields that render directly into visible text nodes.
+- Avoid leaving URL or attribute-driven fields in the inline-editing scope unless you have manually verified the output.
+
+Safety behavior:
+
+- When `InlineEditableFields` is present, placeholder tokens are preserved only for the listed fields.
+- When it is omitted, the package preserves placeholders only for ACF `text` and `textarea` fields by default.
+- Placeholder tokens for other field types are stripped before Twig render so empty non-text fields do not leak into URLs, attributes, or image sources.
 
 When you need full control, keep auto inline editing disabled and use ACF's manual inline editing helper attributes in your render template.

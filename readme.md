@@ -34,13 +34,13 @@ The current Composer package name is still `palmiak/timber-acf-wp-blocks`, so yo
 }
 ```
 
-Or install it with Composer after adding the repository entry:
+Or install it with Composer after adding the vcs repository entry:
 
 ```bash
 composer require palmiak/timber-acf-wp-blocks:dev-master
 ```
 
-Warning: if you do not add the VCS repository entry for `https://github.com/kevin-terry/timber-acf-wp-blocks`, Composer may resolve the original upstream package instead of this fork.
+> **Warning**: if you do not add the VCS repository entry for `https://github.com/kevin-terry/timber-acf-wp-blocks`, Composer may resolve the original upstream package instead of this fork.
 
 ## Contributors
 

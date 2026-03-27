@@ -29,6 +29,7 @@ When creating blocks, you can include any of the following parameters.
  SupportsJSX: (true|false)
  HideSidebarFields: (true|false)
  AutoInlineEditing: (true|false)
+ InlineEditableFields: (space-separated field names)
  Example: (JSON format)
  ExampleImage: (path or URL)
  Parent: (space-separated)
@@ -40,6 +41,18 @@ When creating blocks, you can include any of the following parameters.
 ```
 
 ## Additional Support Flags
+
+### InlineEditableFields
+
+Restricts which fields are allowed to keep ACF's inline-editing placeholder tokens during preview rendering.
+
+```twig
+{# InlineEditableFields: heading body #}
+```
+
+Use this together with `AutoInlineEditing: true` when your template includes non-text fields in URLs, attributes, class names, or other derived values and you want to avoid placeholder-token leaks.
+
+If omitted, the package defaults to preserving placeholders only for ACF `text` and `textarea` fields.
 
 ### SupportsHtml
 

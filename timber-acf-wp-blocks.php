@@ -12,6 +12,13 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 	class Timber_Acf_Wp_Blocks
 	{
 		/**
+		 * Per-block runtime settings derived from Twig headers.
+		 *
+		 * @var array
+		 */
+		private static $block_runtime_settings = array();
+
+		/**
 		 * Tracks blocks using flat file structure for admin notice.
 		 *
 		 * @var array
@@ -35,6 +42,7 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 				&& is_callable('acf_register_block_type')
 				&& class_exists('Timber')
 			) {
+				add_filter('block_type_metadata', array(__CLASS__, 'maybe_swap_to_render_template_for_auto_inline_editing'));
 				add_action('acf/init', array(__CLASS__, 'timber_block_init'), 10, 0);
 				add_action('admin_init', array(__CLASS__, 'handle_flat_structure_notice_dismiss'));
 				add_action('admin_notices', array(__CLASS__, 'show_flat_structure_notice'));
@@ -139,6 +147,7 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		{
 			// Get header info from the Twig file.
 			$file_headers = self::get_twig_file_headers($structure['twig_file']);
+			self::store_block_runtime_settings($slug, $file_headers);
 
 			// Validate required headers.
 			if (empty($file_headers['title']) || empty($file_headers['category'])) {
@@ -223,6 +232,7 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 					'supports_jsx'               => 'SupportsJSX',
 					'hide_sidebar_fields'        => 'HideSidebarFields',
 					'auto_inline_editing'        => 'AutoInlineEditing',
+					'inline_editable_fields'     => 'InlineEditableFields',
 					'parent'                     => 'Parent',
 					'ancestor'                   => 'Ancestor',
 					'uses_context'               => 'UsesContext',
@@ -473,6 +483,7 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 			$context['slug']          = $slug;
 			$context['is_preview']    = $is_preview;
 			$context['fields']        = $is_example ? $block['data'] : \get_fields();
+			$context['fields']        = self::prepare_fields_for_auto_inline_editing($context['fields'], $block, $is_preview);
 			$context['inner_content'] = $content;
 			$context['wp_block']      = $wp_block;
 			$context['block_context'] = $block_context;
@@ -480,7 +491,7 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 				array($slug),
 				isset($block['className']) ? array($block['className']) : array(),
 				$is_preview ? array('is-preview') : array(),
-				array('align' . $context['block']['align'])
+				! empty($context['block']['align']) ? array('align' . $context['block']['align']) : array()
 			);
 
 			$context['classes'] = implode(' ', $classes);
@@ -532,6 +543,198 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 			}
 
 			return $ret;
+		}
+
+		/**
+		 * Swap callback-rendered blocks to a shared render template when ACF auto inline editing is enabled.
+		 *
+		 * @param array $metadata Raw block metadata.
+		 * @return array
+		 */
+		public static function maybe_swap_to_render_template_for_auto_inline_editing($metadata)
+		{
+			if (! is_array($metadata) || empty($metadata['acf']) || ! is_array($metadata['acf'])) {
+				return $metadata;
+			}
+
+			if (empty($metadata['acf']['autoInlineEditing'])) {
+				return $metadata;
+			}
+
+			if (empty($metadata['acf']['renderCallback']) || ! self::is_timber_blocks_render_callback($metadata['acf']['renderCallback'])) {
+				return $metadata;
+			}
+
+			$metadata['acf']['renderTemplate'] = self::get_auto_inline_render_template_path();
+			unset($metadata['acf']['renderCallback']);
+
+			return $metadata;
+		}
+
+		/**
+		 * Normalize placeholder values before Twig render so empty non-text fields don't leak into markup.
+		 *
+		 * @param mixed $fields     ACF field values.
+		 * @param array $block      Current block data.
+		 * @param bool  $is_preview Whether the block is rendering in preview.
+		 * @return mixed
+		 */
+		public static function prepare_fields_for_auto_inline_editing($fields, $block, $is_preview)
+		{
+			if (! $is_preview || ! is_array($fields)) {
+				return $fields;
+			}
+
+			if (empty($block['auto_inline_editing']) && empty($block['acf']['autoInlineEditing'])) {
+				return $fields;
+			}
+
+			$allowed_field_names = self::get_allowed_auto_inline_field_names($block);
+
+			return self::sanitize_auto_inline_placeholders($fields, $allowed_field_names);
+		}
+
+		/**
+		 * Store parsed runtime settings that Twig rendering can consult later.
+		 *
+		 * @param string $slug         Block slug.
+		 * @param array  $file_headers Parsed Twig headers.
+		 */
+		private static function store_block_runtime_settings($slug, $file_headers)
+		{
+			self::$block_runtime_settings[self::normalize_block_name($slug)] = array(
+				'inline_editable_fields' => self::parse_space_separated_header($file_headers, 'inline_editable_fields'),
+			);
+		}
+
+		/**
+		 * @param string $block_name Block name or slug.
+		 * @return string
+		 */
+		private static function normalize_block_name($block_name)
+		{
+			if (! is_string($block_name) || '' === $block_name) {
+				return '';
+			}
+
+			return false === strpos($block_name, '/') ? 'acf/' . $block_name : $block_name;
+		}
+
+		/**
+		 * @param array  $file_headers Parsed Twig headers.
+		 * @param string $header_key   Header key.
+		 * @return array
+		 */
+		private static function parse_space_separated_header($file_headers, $header_key)
+		{
+			if (empty($file_headers[$header_key])) {
+				return array();
+			}
+
+			$items = str_getcsv($file_headers[$header_key], ' ', '"');
+			$items = array_filter(array_map('trim', $items));
+
+			return array_values(array_unique($items));
+		}
+
+		/**
+		 * @param mixed $render_callback Render callback from metadata.
+		 * @return bool
+		 */
+		private static function is_timber_blocks_render_callback($render_callback)
+		{
+			if (! is_string($render_callback)) {
+				return false;
+			}
+
+			return ltrim($render_callback, '\\') === 'Timber_Acf_Wp_Blocks::timber_blocks_callback';
+		}
+
+		/**
+		 * @return string
+		 */
+		private static function get_auto_inline_render_template_path()
+		{
+			return __DIR__ . '/timber-acf-wp-blocks-render-template.php';
+		}
+
+		/**
+		 * @param array $block Current block data.
+		 * @return array
+		 */
+		private static function get_allowed_auto_inline_field_names($block)
+		{
+			$block_name = ! empty($block['name']) ? self::normalize_block_name($block['name']) : '';
+			$runtime_settings = isset(self::$block_runtime_settings[$block_name]) ? self::$block_runtime_settings[$block_name] : array();
+
+			if (! empty($runtime_settings['inline_editable_fields'])) {
+				return $runtime_settings['inline_editable_fields'];
+			}
+
+			return self::get_default_inline_editable_field_names($block);
+		}
+
+		/**
+		 * Default to ACF's contenteditable-safe field types when no header whitelist is defined.
+		 *
+		 * @param array $block Current block data.
+		 * @return array
+		 */
+		private static function get_default_inline_editable_field_names($block)
+		{
+			if (! function_exists('acf_get_block_fields')) {
+				return array();
+			}
+
+			$field_names = array();
+			$allowed_types = array('text', 'textarea');
+			$fields = acf_get_block_fields($block);
+
+			if (! is_array($fields)) {
+				return array();
+			}
+
+			foreach ($fields as $field) {
+				if (empty($field['name']) || empty($field['type'])) {
+					continue;
+				}
+
+				if (in_array($field['type'], $allowed_types, true)) {
+					$field_names[] = $field['name'];
+				}
+			}
+
+			return array_values(array_unique($field_names));
+		}
+
+		/**
+		 * Recursively strip placeholder tokens for fields that should not stay inline-editable.
+		 *
+		 * @param mixed $value               Field value or nested data.
+		 * @param array $allowed_field_names Field names allowed to keep placeholders.
+		 * @return mixed
+		 */
+		private static function sanitize_auto_inline_placeholders($value, $allowed_field_names)
+		{
+			if (is_array($value)) {
+				foreach ($value as $key => $item) {
+					$value[$key] = self::sanitize_auto_inline_placeholders($item, $allowed_field_names);
+				}
+
+				return $value;
+			}
+
+			if (! is_string($value) || false === strpos($value, 'acf_auto_inline_editing_field_name_')) {
+				return $value;
+			}
+
+			return preg_replace_callback(
+				'/acf_auto_inline_editing_field_name_([A-Za-z0-9_]+)/',
+				function ($matches) use ($allowed_field_names) {
+					return in_array($matches[1], $allowed_field_names, true) ? $matches[0] : '';
+				},
+				$value
+			);
 		}
 
 		/**

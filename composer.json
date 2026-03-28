@@ -1,29 +1,44 @@
 {
   "name": "palmiak/timber-acf-wp-blocks",
   "description": "Create Gutenberg blocks from Twig templates and ACF fields.",
-  "keywords": ["wordpress", "gutenberg", "advanced custom fields"],
+  "keywords": [
+    "wordpress",
+    "gutenberg",
+    "advanced custom fields"
+  ],
   "require": {
-      "php": ">=5.6"
+    "php": ">=8.2"
   },
   "license": "MIT",
   "authors": [
-      {
-          "name": "Maciej Palmowski",
-          "email": "m.palmowski@freshpixels.pl"
-      },
-      {
-          "name": "Michael W. Delaney",
-          "email": "michael@michaeldelaney.me"
-      },
-      {
-          "name": "Nico Prat"
-      }
+    {
+      "name": "Maciej Palmowski",
+      "email": "m.palmowski@freshpixels.pl"
+    },
+    {
+      "name": "Michael W. Delaney",
+      "email": "michael@michaeldelaney.me"
+    },
+    {
+      "name": "Nico Prat"
+    }
   ],
   "autoload": {
-      "files": ["timber-acf-wp-blocks.php"]
+    "files": [
+      "timber-acf-wp-blocks.php"
+    ]
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+  "scripts": {
+    "lint": "phpcs --standard=phpcs.xml",
+    "fix": "phpcbf --standard=phpcs.xml"
   },
   "require-dev": {
-      "wp-coding-standards/wpcs": "2.0",
-      "dealerdirect/phpcodesniffer-composer-installer": "0.5.0"
+    "dealerdirect/phpcodesniffer-composer-installer": "1.2.0",
+    "wp-coding-standards/wpcs": "3.3.0"
   }
 }

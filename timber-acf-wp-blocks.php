@@ -1,16 +1,22 @@
 <?php
+/**
+ * Plugin bootstrap and block registration helpers for Timber ACF blocks.
+ *
+ * @package Timber_Acf_Wp_Blocks
+ */
 
 use Timber\Timber;
 
 /**
  * Check if class exists before redefining it
  */
-if (! class_exists('Timber_Acf_Wp_Blocks')) {
+if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 	/**
 	 * Main Timber_Acf_Wp_Block Class
 	 */
-	class Timber_Acf_Wp_Blocks
-	{
+	class Timber_Acf_Wp_Blocks {
+
+
 		/**
 		 * Per-block runtime settings derived from Twig headers.
 		 *
@@ -35,18 +41,20 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		/**
 		 * Constructor
 		 */
-		public function __construct()
-		{
+		public function __construct() {
 			if (
-				is_callable('add_action')
-				&& is_callable('acf_register_block_type')
-				&& class_exists('Timber')
+				is_callable( 'add_action' )
+				&& is_callable( 'acf_register_block_type' )
+				&& class_exists( 'Timber' )
 			) {
-				add_filter('block_type_metadata', array(__CLASS__, 'maybe_swap_to_render_template_for_auto_inline_editing'));
-				add_action('acf/init', array(__CLASS__, 'timber_block_init'), 10, 0);
-				add_action('admin_init', array(__CLASS__, 'handle_flat_structure_notice_dismiss'));
-				add_action('admin_notices', array(__CLASS__, 'show_flat_structure_notice'));
-			} elseif (is_callable('add_action')) {
+				add_filter(
+					'block_type_metadata',
+					array( __CLASS__, 'maybe_swap_to_render_template_for_auto_inline_editing' )
+				);
+				add_action( 'acf/init', array( __CLASS__, 'timber_block_init' ), 10, 0 );
+				add_action( 'admin_init', array( __CLASS__, 'handle_flat_structure_notice_dismiss' ) );
+				add_action( 'admin_notices', array( __CLASS__, 'show_flat_structure_notice' ) );
+			} elseif ( is_callable( 'add_action' ) ) {
 				add_action(
 					'admin_notices',
 					function () {
@@ -62,35 +70,34 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * Create blocks based on templates found in Timber's "views/blocks" directory.
 		 * Supports both flat file structure (legacy) and subfolder structure (modern).
 		 */
-		public static function timber_block_init()
-		{
+		public static function timber_block_init() {
 			// Get base directories (not including auto-discovered subfolders).
-			$base_directories = apply_filters('timber/acf-gutenberg-blocks-templates', array('views/blocks'));
+			$base_directories = apply_filters( 'timber/acf-gutenberg-blocks-templates', array( 'views/blocks' ) );
 
 			// Track registered blocks to avoid duplicates.
 			$registered_blocks = array();
 
-			foreach ($base_directories as $base_dir) {
-				$base_path = \locate_template($base_dir);
+			foreach ( $base_directories as $base_dir ) {
+				$base_path = \locate_template( $base_dir );
 
-				if (! $base_path || ! file_exists($base_path)) {
+				if ( ! $base_path || ! file_exists( $base_path ) ) {
 					continue;
 				}
 
-				$directory_iterator = new DirectoryIterator($base_path);
+				$directory_iterator = new DirectoryIterator( $base_path );
 
-				foreach ($directory_iterator as $item) {
-					if ($item->isDot()) {
+				foreach ( $directory_iterator as $item ) {
+					if ( $item->isDot() ) {
 						continue;
 					}
 
-					// Check for subfolder structure: views/blocks/my-block/my-block.twig
-					if ($item->isDir()) {
-						$slug = $item->getFilename();
+					// Check for subfolder structure: views/blocks/my-block/my-block.twig.
+					if ( $item->isDir() ) {
+						$slug           = $item->getFilename();
 						$subfolder_twig = $base_path . '/' . $slug . '/' . $slug . '.twig';
 
-						if (file_exists($subfolder_twig)) {
-							// Subfolder structure found
+						if ( file_exists( $subfolder_twig ) ) {
+							// Subfolder structure found.
 							$structure = array(
 								'type'          => 'subfolder',
 								'directory'     => $base_dir . '/' . $slug,
@@ -99,26 +106,26 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 								'block_json'    => $base_path . '/' . $slug . '/block.json',
 							);
 
-							if (! isset($registered_blocks[$slug])) {
-								self::register_block_from_structure($slug, $structure);
-								$registered_blocks[$slug] = true;
+							if ( ! isset( $registered_blocks[ $slug ] ) ) {
+								self::register_block_from_structure( $slug, $structure );
+								$registered_blocks[ $slug ] = true;
 							}
 						}
 						continue;
 					}
 
-					// Flat file structure: views/blocks/my-block.twig
-					if ($item->isFile()) {
-						$file_parts = pathinfo($item->getFilename());
+					// Flat file structure: views/blocks/my-block.twig.
+					if ( $item->isFile() ) {
+						$file_parts = pathinfo( $item->getFilename() );
 
-						if (! isset($file_parts['extension']) || 'twig' !== $file_parts['extension']) {
+						if ( ! isset( $file_parts['extension'] ) || 'twig' !== $file_parts['extension'] ) {
 							continue;
 						}
 
 						$slug = $file_parts['filename'];
 
-						// Skip if already registered via subfolder
-						if (isset($registered_blocks[$slug])) {
+						// Skip if already registered via subfolder.
+						if ( isset( $registered_blocks[ $slug ] ) ) {
 							continue;
 						}
 
@@ -130,8 +137,8 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 							'block_json'    => null,
 						);
 
-						self::register_block_from_structure($slug, $structure);
-						$registered_blocks[$slug] = true;
+						self::register_block_from_structure( $slug, $structure );
+						$registered_blocks[ $slug ] = true;
 					}
 				}
 			}
@@ -143,55 +150,49 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param string $slug      Block slug.
 		 * @param array  $structure Structure information array.
 		 */
-		public static function register_block_from_structure($slug, $structure)
-		{
+		public static function register_block_from_structure( $slug, $structure ) {
 			// Get header info from the Twig file.
-			$file_headers = self::get_twig_file_headers($structure['twig_file']);
-			self::store_block_runtime_settings($slug, $file_headers);
+			$file_headers = self::get_twig_file_headers( $structure['twig_file'] );
+			self::store_block_runtime_settings( $slug, $file_headers );
 
-			// Validate required headers.
-			if (empty($file_headers['title']) || empty($file_headers['category'])) {
+			if ( empty( $file_headers['title'] ) || empty( $file_headers['category'] ) ) {
 				return;
 			}
 
-			if ($structure['type'] === 'subfolder') {
-				// Modern subfolder structure - use block.json
+			if ( 'subfolder' === $structure['type'] ) {
 				$block_json_path = $structure['block_json'];
-				$existing_data = array();
+				$existing_data   = array();
 
-				// Load existing block.json if it exists
-				if (file_exists($block_json_path)) {
-					$existing_content = file_get_contents($block_json_path);
-					$existing_data = json_decode($existing_content, true) ?? array();
+				if ( file_exists( $block_json_path ) ) {
+					// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Block metadata files live on the local filesystem.
+					$existing_content = file_get_contents( $block_json_path );
+					$existing_data    = json_decode( $existing_content, true ) ?? array();
 				}
 
-				// Auto-detect example image if not specified in headers
-				if (empty($file_headers['example_image'])) {
-					$file_headers['example_image'] = self::auto_detect_example_image($structure['absolute_path'], $structure['directory']);
+				if ( empty( $file_headers['example_image'] ) ) {
+					$file_headers['example_image'] = self::auto_detect_example_image(
+						$structure['absolute_path'],
+						$structure['directory']
+					);
 				}
 
-				// Generate block.json data from Twig headers
-				$block_json_data = self::generate_block_json_data($file_headers, $slug, $existing_data);
+				$block_json_data = self::generate_block_json_data( $file_headers, $slug, $existing_data );
 
-				// Maybe write/update block.json
-				self::maybe_write_block_json($block_json_path, $structure['twig_file'], $block_json_data);
+				self::maybe_write_block_json( $block_json_path, $structure['twig_file'], $block_json_data );
 
-				// Register using block.json if it exists
-				if (file_exists($block_json_path)) {
-					self::register_block_from_json($block_json_path);
+				if ( file_exists( $block_json_path ) ) {
+					self::register_block_from_json( $block_json_path );
 					return;
 				}
 			}
 
-			// Flat structure or block.json doesn't exist - use legacy method
-			if ($structure['type'] === 'flat') {
-				self::trigger_flat_structure_deprecation($slug);
+			if ( 'flat' === $structure['type'] ) {
+				self::trigger_flat_structure_deprecation( $slug );
 			}
 
-			// Use legacy acf_register_block_type for flat files
-			$data = self::build_legacy_block_data($file_headers, $slug);
-			$data = self::timber_block_default_data($data);
-			acf_register_block_type($data);
+			$data = self::build_legacy_block_data( $file_headers, $slug );
+			$data = self::timber_block_default_data( $data );
+			acf_register_block_type( $data );
 		}
 
 		/**
@@ -200,8 +201,7 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param string $file_path Absolute path to Twig file.
 		 * @return array Parsed headers.
 		 */
-		public static function get_twig_file_headers($file_path)
-		{
+		public static function get_twig_file_headers( $file_path ) {
 			return get_file_data(
 				$file_path,
 				array(
@@ -249,12 +249,10 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param string $slug         Block slug.
 		 * @return array Block registration data.
 		 */
-		public static function build_legacy_block_data($file_headers, $slug)
-		{
+		public static function build_legacy_block_data( $file_headers, $slug ) {
 			// Keywords exploding with quotes.
-			$keywords = str_getcsv($file_headers['keywords'], ' ', '"', '\\');
+			$keywords = str_getcsv( $file_headers['keywords'], ' ', '"', '\\' );
 
-			// Set up block data for registration.
 			$data = array(
 				'name'              => $slug,
 				'title'             => $file_headers['title'],
@@ -266,95 +264,76 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 				'align'             => $file_headers['align'],
 				'api_version'       => 3,
 				'acf_block_version' => 3,
-				'render_callback'   => array(__CLASS__, 'timber_blocks_callback'),
+				'render_callback'   => array( __CLASS__, 'timber_blocks_callback' ),
 				'enqueue_assets'    => $file_headers['enqueue_assets'],
 				'default_data'      => $file_headers['default_data'],
 			);
 
-			// Removes empty defaults.
-			$data = array_filter($data);
+			$data = array_filter( $data );
 
-			// If the PostTypes header is set in the template, restrict this block
-			// to those types.
-			if (! empty($file_headers['post_types'])) {
-				$data['post_types'] = explode(' ', $file_headers['post_types']);
+			if ( ! empty( $file_headers['post_types'] ) ) {
+				$data['post_types'] = explode( ' ', $file_headers['post_types'] );
 			}
-			// If the SupportsAlign header is set in the template, restrict this block
-			// to those aligns.
-			if (! empty($file_headers['supports_align'])) {
+
+			if ( ! empty( $file_headers['supports_align'] ) ) {
 				$data['supports']['align'] =
-					in_array($file_headers['supports_align'], array('true', 'false'), true) ?
-					filter_var($file_headers['supports_align'], FILTER_VALIDATE_BOOLEAN) :
-					explode(' ', $file_headers['supports_align']);
+					in_array( $file_headers['supports_align'], array( 'true', 'false' ), true ) ?
+					filter_var( $file_headers['supports_align'], FILTER_VALIDATE_BOOLEAN ) :
+					explode( ' ', $file_headers['supports_align'] );
 			}
-			// If the SupportsAlignContent header is set in the template, restrict this block
-			// to those aligns.
-			if (! empty($file_headers['supports_align_content'])) {
-				$data['supports']['alignContent'] = ('true' === $file_headers['supports_align_content']) ?
-					true : (('matrix' === $file_headers['supports_align_content']) ? "matrix" : false);
+
+			if ( ! empty( $file_headers['supports_align_content'] ) ) {
+				$data['supports']['alignContent'] = ( 'true' === $file_headers['supports_align_content'] ) ?
+					true : ( ( 'matrix' === $file_headers['supports_align_content'] ) ? 'matrix' : false );
 			}
-			// If the SupportsMode header is set in the template, restrict this block
-			// mode feature.
-			if (! empty($file_headers['supports_mode'])) {
+
+			if ( ! empty( $file_headers['supports_mode'] ) ) {
 				$data['supports']['mode'] =
-					('true' === $file_headers['supports_mode']) ? true : false;
+					( 'true' === $file_headers['supports_mode'] ) ? true : false;
 			}
-			// If the SupportsMultiple header is set in the template, restrict this block
-			// multiple feature.
-			if (! empty($file_headers['supports_multiple'])) {
+
+			if ( ! empty( $file_headers['supports_multiple'] ) ) {
 				$data['supports']['multiple'] =
-					('true' === $file_headers['supports_multiple']) ? true : false;
+					( 'true' === $file_headers['supports_multiple'] ) ? true : false;
 			}
-			// If the SupportsAnchor header is set in the template, restrict this block
-			// anchor feature.
-			if (! empty($file_headers['supports_anchor'])) {
+
+			if ( ! empty( $file_headers['supports_anchor'] ) ) {
 				$data['supports']['anchor'] =
-					('true' === $file_headers['supports_anchor']) ? true : false;
+					( 'true' === $file_headers['supports_anchor'] ) ? true : false;
 			}
 
-			// If the SupportsCustomClassName is set to false hides the possibilty to
-			// add custom class name.
-			if (! empty($file_headers['supports_custom_class_name'])) {
+			if ( ! empty( $file_headers['supports_custom_class_name'] ) ) {
 				$data['supports']['customClassName'] =
-					('true' === $file_headers['supports_custom_class_name']) ? true : false;
+					( 'true' === $file_headers['supports_custom_class_name'] ) ? true : false;
 			}
 
-			// If the SupportsReusable is set in the templates it adds a posibility to
-			// make this block reusable.
-			if (! empty($file_headers['supports_reusable'])) {
+			if ( ! empty( $file_headers['supports_reusable'] ) ) {
 				$data['supports']['reusable'] =
-					('true' === $file_headers['supports_reusable']) ? true : false;
+					( 'true' === $file_headers['supports_reusable'] ) ? true : false;
 			}
 
-			// If the SupportsFullHeight is set in the templates it adds a posibility to
-			// make this block full height.
-			if (! empty($file_headers['supports_full_height'])) {
+			if ( ! empty( $file_headers['supports_full_height'] ) ) {
 				$data['supports']['full_height'] =
-					('true' === $file_headers['supports_full_height']) ? true : false;
+					( 'true' === $file_headers['supports_full_height'] ) ? true : false;
 			}
 
-			// If the SupportsHtml header is set in the template, control HTML editing.
-			if (! empty($file_headers['supports_html'])) {
+			if ( ! empty( $file_headers['supports_html'] ) ) {
 				$data['supports']['html'] =
-					('true' === $file_headers['supports_html']) ? true : false;
+					( 'true' === $file_headers['supports_html'] ) ? true : false;
 			}
 
-			// If the SupportsInserter header is set in the template, control inserter visibility.
-			if (! empty($file_headers['supports_inserter'])) {
+			if ( ! empty( $file_headers['supports_inserter'] ) ) {
 				$data['supports']['inserter'] =
-					('true' === $file_headers['supports_inserter']) ? true : false;
+					( 'true' === $file_headers['supports_inserter'] ) ? true : false;
 			}
 
-			// If the SupportsLock header is set in the template, control lock UI support.
-			if (! empty($file_headers['supports_lock'])) {
+			if ( ! empty( $file_headers['supports_lock'] ) ) {
 				$data['supports']['lock'] =
-					('true' === $file_headers['supports_lock']) ? true : false;
+					( 'true' === $file_headers['supports_lock'] ) ? true : false;
 			}
 
-			// Gives a possibility to enqueue style. If not an absoulte URL than adds
-			// theme directory.
-			if (! empty($file_headers['enqueue_style'])) {
-				if (! filter_var($file_headers['enqueue_style'], FILTER_VALIDATE_URL)) {
+			if ( ! empty( $file_headers['enqueue_style'] ) ) {
+				if ( ! filter_var( $file_headers['enqueue_style'], FILTER_VALIDATE_URL ) ) {
 					$data['enqueue_style'] =
 						get_template_directory_uri() . '/' . $file_headers['enqueue_style'];
 				} else {
@@ -362,10 +341,8 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 				}
 			}
 
-			// Gives a possibility to enqueue script. If not an absoulte URL than adds
-			// theme directory.
-			if (! empty($file_headers['enqueue_script'])) {
-				if (! filter_var($file_headers['enqueue_script'], FILTER_VALIDATE_URL)) {
+			if ( ! empty( $file_headers['enqueue_script'] ) ) {
+				if ( ! filter_var( $file_headers['enqueue_script'], FILTER_VALIDATE_URL ) ) {
 					$data['enqueue_script'] =
 						get_template_directory_uri() . '/' . $file_headers['enqueue_script'];
 				} else {
@@ -373,10 +350,8 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 				}
 			}
 
-			// Gives a possibility to set an example image. If not an absolute URL than adds
-			// theme directory.
-			if (! empty($file_headers['example_image'])) {
-				if (! filter_var($file_headers['example_image'], FILTER_VALIDATE_URL)) {
+			if ( ! empty( $file_headers['example_image'] ) ) {
+				if ( ! filter_var( $file_headers['example_image'], FILTER_VALIDATE_URL ) ) {
 					$data['example_image'] =
 						get_template_directory_uri() . '/' . $file_headers['example_image'];
 				} else {
@@ -384,19 +359,16 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 				}
 			}
 
-			// Support for experimantal JSX.
-			if (! empty($file_headers['supports_jsx'])) {
-				// Leaving the experimaental part for 2 versions.
+			if ( ! empty( $file_headers['supports_jsx'] ) ) {
 				$data['supports']['__experimental_jsx'] =
-					('true' === $file_headers['supports_jsx']) ? true : false;
+					( 'true' === $file_headers['supports_jsx'] ) ? true : false;
 				$data['supports']['jsx']                =
-					('true' === $file_headers['supports_jsx']) ? true : false;
+					( 'true' === $file_headers['supports_jsx'] ) ? true : false;
 			}
 
-			// Support for "example".
-			if (! empty($file_headers['example'])) {
-				$json                       = json_decode($file_headers['example'], true);
-				$example_data               = (null !== $json) ? $json : array();
+			if ( ! empty( $file_headers['example'] ) ) {
+				$json                       = json_decode( $file_headers['example'], true );
+				$example_data               = ( null !== $json ) ? $json : array();
 				$example_data['is_example'] = true;
 				$data['example']            = array(
 					'attributes' => array(
@@ -406,25 +378,21 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 				);
 			}
 
-			// Support for "parent".
-			if (! empty($file_headers['parent'])) {
-				$data['parent'] = str_getcsv($file_headers['parent'], ' ', '"');
+			if ( ! empty( $file_headers['parent'] ) ) {
+				$data['parent'] = str_getcsv( $file_headers['parent'], ' ', '"' );
 			}
 
-			// Support for "ancestor".
-			if (! empty($file_headers['ancestor'])) {
-				$data['ancestor'] = str_getcsv($file_headers['ancestor'], ' ', '"');
+			if ( ! empty( $file_headers['ancestor'] ) ) {
+				$data['ancestor'] = str_getcsv( $file_headers['ancestor'], ' ', '"' );
 			}
 
-			// Support for "usesContext".
-			if (! empty($file_headers['uses_context'])) {
-				$data['uses_context'] = explode(' ', $file_headers['uses_context']);
+			if ( ! empty( $file_headers['uses_context'] ) ) {
+				$data['uses_context'] = explode( ' ', $file_headers['uses_context'] );
 			}
 
-			// Support for "providesContext".
-			if (! empty($file_headers['provides_context'])) {
-				$json = json_decode($file_headers['provides_context'], true);
-				if (null !== $json) {
+			if ( ! empty( $file_headers['provides_context'] ) ) {
+				$json = json_decode( $file_headers['provides_context'], true );
+				if ( null !== $json ) {
 					$data['provides_context'] = $json;
 				}
 			}
@@ -442,37 +410,43 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param WP_Block $wp_block      The block instance (API v2).
 		 * @param array    $block_context The block context (API v2).
 		 */
-		public static function timber_blocks_callback($block, $content = '', $is_preview = false, $post_id = 0, $wp_block = null, $block_context = array())
-		{
-			// Set up the slug to be useful.
-			$slug = str_replace('acf/', '', $block['name']);
+		public static function timber_blocks_callback(
+			$block,
+			$content = '',
+			$is_preview = false,
+			$post_id = 0,
+			$wp_block = null,
+			$block_context = array()
+		) {
+			$slug = str_replace( 'acf/', '', $block['name'] );
 
 			$is_example = false;
 
-			if (! empty($block['data']['is_example'])) {
+			if ( ! empty( $block['data']['is_example'] ) ) {
 				$is_example = true;
 			}
 
-			// Get example_image from either legacy location or ACF block.json location
 			$example_image = null;
-			if (! empty($block['example_image'])) {
+			if ( ! empty( $block['example_image'] ) ) {
 				$example_image = $block['example_image'];
-			} elseif (! empty($block['acf']['exampleImage'])) {
-				// From block.json acf.exampleImage - resolve relative path
+			} elseif ( ! empty( $block['acf']['exampleImage'] ) ) {
 				$example_image = $block['acf']['exampleImage'];
-				if (! filter_var($example_image, FILTER_VALIDATE_URL)) {
+				if ( ! filter_var( $example_image, FILTER_VALIDATE_URL ) ) {
 					$example_image = get_template_directory_uri() . '/' . $example_image;
 				}
 			}
 
-			// If this is an example and we have an example_image, render the image instead.
-			if ($is_example && ! empty($example_image)) {
-				echo '<img src="' . esc_url($example_image) . '" alt="' . esc_attr($block['title']) . '" style="width: 100%; height: auto;" />';
+			if ( $is_example && ! empty( $example_image ) ) {
+				printf(
+					'<img src="%1$s" alt="%2$s" style="width: 100%%; height: auto;" />',
+					esc_url( $example_image ),
+					esc_attr( $block['title'] )
+				);
 				return;
 			}
 
 			// Context compatibility.
-			if (method_exists('Timber', 'context')) {
+			if ( method_exists( 'Timber', 'context' ) ) {
 				$context = Timber::context();
 			} else {
 				$context = Timber::get_context();
@@ -483,26 +457,30 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 			$context['slug']          = $slug;
 			$context['is_preview']    = $is_preview;
 			$context['fields']        = $is_example ? $block['data'] : \get_fields();
-			$context['fields']        = self::prepare_fields_for_auto_inline_editing($context['fields'], $block, $is_preview);
+			$context['fields']        = self::prepare_fields_for_auto_inline_editing(
+				$context['fields'],
+				$block,
+				$is_preview
+			);
 			$context['inner_content'] = $content;
 			$context['wp_block']      = $wp_block;
 			$context['block_context'] = $block_context;
-			$classes               = array_merge(
-				array($slug),
-				isset($block['className']) ? array($block['className']) : array(),
-				$is_preview ? array('is-preview') : array(),
-				! empty($context['block']['align']) ? array('align' . $context['block']['align']) : array()
+			$classes                  = array_merge(
+				array( $slug ),
+				isset( $block['className'] ) ? array( $block['className'] ) : array(),
+				$is_preview ? array( 'is-preview' ) : array(),
+				! empty( $context['block']['align'] ) ? array( 'align' . $context['block']['align'] ) : array()
 			);
 
-			$context['classes'] = implode(' ', $classes);
+			$context['classes'] = implode( ' ', $classes );
 
-			$context = apply_filters('timber/acf-gutenberg-blocks-data', $context);
-			$context = apply_filters('timber/acf-gutenberg-blocks-data/' . $slug, $context);
-			$context = apply_filters('timber/acf-gutenberg-blocks-data/' . $block['id'], $context);
+			$context = apply_filters( 'timber/acf-gutenberg-blocks-data', $context );
+			$context = apply_filters( 'timber/acf-gutenberg-blocks-data/' . $slug, $context );
+			$context = apply_filters( 'timber/acf-gutenberg-blocks-data/' . $block['id'], $context );
 
-			$paths = self::timber_acf_path_render($slug, $is_preview, $is_example);
+			$paths = self::timber_acf_path_render( $slug, $is_preview, $is_example );
 
-			Timber::render($paths, $context);
+			Timber::render( $paths, $context );
 		}
 
 		/**
@@ -512,8 +490,7 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param bool   $is_preview Checks if preview.
 		 * @param bool   $is_example Checks if example.
 		 */
-		public static function timber_acf_path_render($slug, $is_preview, $is_example)
-		{
+		public static function timber_acf_path_render( $slug, $is_preview, $is_example ) {
 			$directories = self::timber_block_directory_getter();
 
 			$ret = array();
@@ -523,20 +500,20 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 			 *
 			 * @since 1.12
 			 */
-			$example_identifier = apply_filters('timber/acf-gutenberg-blocks-example-identifier', '-example');
+			$example_identifier = apply_filters( 'timber/acf-gutenberg-blocks-example-identifier', '-example' );
 
 			/**
 			 * Filters the name of suffix for preview file.
 			 *
 			 * @since 1.12
 			 */
-			$preview_identifier = apply_filters('timber/acf-gutenberg-blocks-preview-identifier', '-preview');
+			$preview_identifier = apply_filters( 'timber/acf-gutenberg-blocks-preview-identifier', '-preview' );
 
-			foreach ($directories as $directory) {
-				if ($is_example) {
+			foreach ( $directories as $directory ) {
+				if ( $is_example ) {
 					$ret[] = $directory . "/{$slug}{$example_identifier}.twig";
 				}
-				if ($is_preview) {
+				if ( $is_preview ) {
 					$ret[] = $directory . "/{$slug}{$preview_identifier}.twig";
 				}
 				$ret[] = $directory . "/{$slug}.twig";
@@ -551,22 +528,24 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param array $metadata Raw block metadata.
 		 * @return array
 		 */
-		public static function maybe_swap_to_render_template_for_auto_inline_editing($metadata)
-		{
-			if (! is_array($metadata) || empty($metadata['acf']) || ! is_array($metadata['acf'])) {
+		public static function maybe_swap_to_render_template_for_auto_inline_editing( $metadata ) {
+			if ( ! is_array( $metadata ) || empty( $metadata['acf'] ) || ! is_array( $metadata['acf'] ) ) {
 				return $metadata;
 			}
 
-			if (empty($metadata['acf']['autoInlineEditing'])) {
+			if ( empty( $metadata['acf']['autoInlineEditing'] ) ) {
 				return $metadata;
 			}
 
-			if (empty($metadata['acf']['renderCallback']) || ! self::is_timber_blocks_render_callback($metadata['acf']['renderCallback'])) {
+			if (
+				empty( $metadata['acf']['renderCallback'] )
+				|| ! self::is_timber_blocks_render_callback( $metadata['acf']['renderCallback'] )
+			) {
 				return $metadata;
 			}
 
 			$metadata['acf']['renderTemplate'] = self::get_auto_inline_render_template_path();
-			unset($metadata['acf']['renderCallback']);
+			unset( $metadata['acf']['renderCallback'] );
 
 			return $metadata;
 		}
@@ -579,19 +558,18 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param bool  $is_preview Whether the block is rendering in preview.
 		 * @return mixed
 		 */
-		public static function prepare_fields_for_auto_inline_editing($fields, $block, $is_preview)
-		{
-			if (! $is_preview || ! is_array($fields)) {
+		public static function prepare_fields_for_auto_inline_editing( $fields, $block, $is_preview ) {
+			if ( ! $is_preview || ! is_array( $fields ) ) {
 				return $fields;
 			}
 
-			if (empty($block['auto_inline_editing']) && empty($block['acf']['autoInlineEditing'])) {
+			if ( empty( $block['auto_inline_editing'] ) && empty( $block['acf']['autoInlineEditing'] ) ) {
 				return $fields;
 			}
 
-			$allowed_field_names = self::get_allowed_auto_inline_field_names($block);
+			$allowed_field_names = self::get_allowed_auto_inline_field_names( $block );
 
-			return self::sanitize_auto_inline_placeholders($fields, $allowed_field_names);
+			return self::sanitize_auto_inline_placeholders( $fields, $allowed_field_names );
 		}
 
 		/**
@@ -600,78 +578,87 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param string $slug         Block slug.
 		 * @param array  $file_headers Parsed Twig headers.
 		 */
-		private static function store_block_runtime_settings($slug, $file_headers)
-		{
-			self::$block_runtime_settings[self::normalize_block_name($slug)] = array(
-				'inline_editable_fields' => self::parse_space_separated_header($file_headers, 'inline_editable_fields'),
+		private static function store_block_runtime_settings( $slug, $file_headers ) {
+			self::$block_runtime_settings[ self::normalize_block_name( $slug ) ] = array(
+				'inline_editable_fields' => self::parse_space_separated_header(
+					$file_headers,
+					'inline_editable_fields'
+				),
 			);
 		}
 
 		/**
+		 * Normalize a block name to the ACF-prefixed form.
+		 *
 		 * @param string $block_name Block name or slug.
 		 * @return string
 		 */
-		private static function normalize_block_name($block_name)
-		{
-			if (! is_string($block_name) || '' === $block_name) {
+		private static function normalize_block_name( $block_name ) {
+			if ( ! is_string( $block_name ) || '' === $block_name ) {
 				return '';
 			}
 
-			return false === strpos($block_name, '/') ? 'acf/' . $block_name : $block_name;
+			return false === strpos( $block_name, '/' ) ? 'acf/' . $block_name : $block_name;
 		}
 
 		/**
+		 * Parse a space-delimited header into a unique list of values.
+		 *
 		 * @param array  $file_headers Parsed Twig headers.
 		 * @param string $header_key   Header key.
 		 * @return array
 		 */
-		private static function parse_space_separated_header($file_headers, $header_key)
-		{
-			if (empty($file_headers[$header_key])) {
+		private static function parse_space_separated_header( $file_headers, $header_key ) {
+			if ( empty( $file_headers[ $header_key ] ) ) {
 				return array();
 			}
 
-			$items = str_getcsv($file_headers[$header_key], ' ', '"');
-			$items = array_filter(array_map('trim', $items));
+			$items = str_getcsv( $file_headers[ $header_key ], ' ', '"' );
+			$items = array_filter( array_map( 'trim', $items ) );
 
-			return array_values(array_unique($items));
+			return array_values( array_unique( $items ) );
 		}
 
 		/**
+		 * Determine whether metadata points to this package's render callback.
+		 *
 		 * @param mixed $render_callback Render callback from metadata.
 		 * @return bool
 		 */
-		private static function is_timber_blocks_render_callback($render_callback)
-		{
-			if (! is_string($render_callback)) {
+		private static function is_timber_blocks_render_callback( $render_callback ) {
+			if ( ! is_string( $render_callback ) ) {
 				return false;
 			}
 
-			return ltrim($render_callback, '\\') === 'Timber_Acf_Wp_Blocks::timber_blocks_callback';
+			return 'Timber_Acf_Wp_Blocks::timber_blocks_callback' === ltrim( $render_callback, '\\' );
 		}
 
 		/**
+		 * Get the shared render-template path for auto inline editing.
+		 *
 		 * @return string
 		 */
-		private static function get_auto_inline_render_template_path()
-		{
+		private static function get_auto_inline_render_template_path() {
 			return __DIR__ . '/timber-acf-wp-blocks-render-template.php';
 		}
 
 		/**
+		 * Resolve the inline-editable field whitelist for a block.
+		 *
 		 * @param array $block Current block data.
 		 * @return array
 		 */
-		private static function get_allowed_auto_inline_field_names($block)
-		{
-			$block_name = ! empty($block['name']) ? self::normalize_block_name($block['name']) : '';
-			$runtime_settings = isset(self::$block_runtime_settings[$block_name]) ? self::$block_runtime_settings[$block_name] : array();
+		private static function get_allowed_auto_inline_field_names( $block ) {
+			$block_name       = ! empty( $block['name'] ) ? self::normalize_block_name( $block['name'] ) : '';
+			$runtime_settings = isset( self::$block_runtime_settings[ $block_name ] )
+				? self::$block_runtime_settings[ $block_name ]
+				: array();
 
-			if (! empty($runtime_settings['inline_editable_fields'])) {
+			if ( ! empty( $runtime_settings['inline_editable_fields'] ) ) {
 				return $runtime_settings['inline_editable_fields'];
 			}
 
-			return self::get_default_inline_editable_field_names($block);
+			return self::get_default_inline_editable_field_names( $block );
 		}
 
 		/**
@@ -680,31 +667,30 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param array $block Current block data.
 		 * @return array
 		 */
-		private static function get_default_inline_editable_field_names($block)
-		{
-			if (! function_exists('acf_get_block_fields')) {
+		private static function get_default_inline_editable_field_names( $block ) {
+			if ( ! function_exists( 'acf_get_block_fields' ) ) {
 				return array();
 			}
 
-			$field_names = array();
-			$allowed_types = array('text', 'textarea');
-			$fields = acf_get_block_fields($block);
+			$field_names   = array();
+			$allowed_types = array( 'text', 'textarea' );
+			$fields        = acf_get_block_fields( $block );
 
-			if (! is_array($fields)) {
+			if ( ! is_array( $fields ) ) {
 				return array();
 			}
 
-			foreach ($fields as $field) {
-				if (empty($field['name']) || empty($field['type'])) {
+			foreach ( $fields as $field ) {
+				if ( empty( $field['name'] ) || empty( $field['type'] ) ) {
 					continue;
 				}
 
-				if (in_array($field['type'], $allowed_types, true)) {
+				if ( in_array( $field['type'], $allowed_types, true ) ) {
 					$field_names[] = $field['name'];
 				}
 			}
 
-			return array_values(array_unique($field_names));
+			return array_values( array_unique( $field_names ) );
 		}
 
 		/**
@@ -714,24 +700,23 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param array $allowed_field_names Field names allowed to keep placeholders.
 		 * @return mixed
 		 */
-		private static function sanitize_auto_inline_placeholders($value, $allowed_field_names)
-		{
-			if (is_array($value)) {
-				foreach ($value as $key => $item) {
-					$value[$key] = self::sanitize_auto_inline_placeholders($item, $allowed_field_names);
+		private static function sanitize_auto_inline_placeholders( $value, $allowed_field_names ) {
+			if ( is_array( $value ) ) {
+				foreach ( $value as $key => $item ) {
+					$value[ $key ] = self::sanitize_auto_inline_placeholders( $item, $allowed_field_names );
 				}
 
 				return $value;
 			}
 
-			if (! is_string($value) || false === strpos($value, 'acf_auto_inline_editing_field_name_')) {
+			if ( ! is_string( $value ) || false === strpos( $value, 'acf_auto_inline_editing_field_name_' ) ) {
 				return $value;
 			}
 
 			return preg_replace_callback(
 				'/acf_auto_inline_editing_field_name_([A-Za-z0-9_]+)/',
-				function ($matches) use ($allowed_field_names) {
-					return in_array($matches[1], $allowed_field_names, true) ? $matches[0] : '';
+				function ( $matches ) use ( $allowed_field_names ) {
+					return in_array( $matches[1], $allowed_field_names, true ) ? $matches[0] : '';
 				},
 				$value
 			);
@@ -742,15 +727,14 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 *
 		 * @param array $directories File path array.
 		 */
-		public static function timber_blocks_subdirectories($directories)
-		{
+		public static function timber_blocks_subdirectories( $directories ) {
 			$ret = array();
 
-			foreach ($directories as $base_directory) {
-				$base_path = \locate_template($base_directory);
+			foreach ( $directories as $base_directory ) {
+				$base_path = \locate_template( $base_directory );
 
 				// Check if the folder exist.
-				if (! $base_path || ! file_exists($base_path)) {
+				if ( ! $base_path || ! file_exists( $base_path ) ) {
 					continue;
 				}
 
@@ -759,9 +743,9 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 					FilesystemIterator::KEY_AS_PATHNAME | FilesystemIterator::CURRENT_AS_SELF
 				);
 
-				if ($template_directory) {
-					foreach ($template_directory as $directory) {
-						if ($directory->isDir() && ! $directory->isDot()) {
+				if ( $template_directory ) {
+					foreach ( $template_directory as $directory ) {
+						if ( $directory->isDir() && ! $directory->isDot() ) {
 							$ret[] = $base_directory . '/' . $directory->getFilename();
 						}
 					}
@@ -774,20 +758,17 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		/**
 		 * Universal function to handle getting folders and subfolders
 		 */
-		public static function timber_block_directory_getter()
-		{
-			if (is_array(self::$cached_block_directories)) {
+		public static function timber_block_directory_getter() {
+			if ( is_array( self::$cached_block_directories ) ) {
 				return self::$cached_block_directories;
 			}
 
-			// Get an array of directories containing blocks.
-			$directories = apply_filters('timber/acf-gutenberg-blocks-templates', array('views/blocks'));
+			$directories = apply_filters( 'timber/acf-gutenberg-blocks-templates', array( 'views/blocks' ) );
 
-			// Check subfolders.
-			$subdirectories = self::timber_blocks_subdirectories($directories);
+			$subdirectories = self::timber_blocks_subdirectories( $directories );
 
-			if (! empty($subdirectories)) {
-				$directories = array_merge($directories, $subdirectories);
+			if ( ! empty( $subdirectories ) ) {
+				$directories = array_merge( $directories, $subdirectories );
 			}
 
 			self::$cached_block_directories = $directories;
@@ -801,23 +782,22 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param  [array] $data - header set data.
 		 * @return [array]
 		 */
-		public static function timber_block_default_data($data)
-		{
-			$default_data = apply_filters('timber/acf-gutenberg-blocks-default-data', array());
+		public static function timber_block_default_data( $data ) {
+			$default_data = apply_filters( 'timber/acf-gutenberg-blocks-default-data', array() );
 			$data_array   = array();
 
-			if (! empty($data['default_data'])) {
+			if ( ! empty( $data['default_data'] ) ) {
 				$default_data_key = $data['default_data'];
 			}
 
-			if (isset($default_data_key) && ! empty($default_data[$default_data_key])) {
-				$data_array = $default_data[$default_data_key];
-			} elseif (! empty($default_data['default'])) {
+			if ( isset( $default_data_key ) && ! empty( $default_data[ $default_data_key ] ) ) {
+				$data_array = $default_data[ $default_data_key ];
+			} elseif ( ! empty( $default_data['default'] ) ) {
 				$data_array = $default_data['default'];
 			}
 
-			if (is_array($data_array)) {
-				$data = array_merge($data_array, $data);
+			if ( is_array( $data_array ) ) {
+				$data = array_merge( $data_array, $data );
 			}
 
 			return $data;
@@ -829,26 +809,29 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 *
 		 * @return bool
 		 */
-		public static function should_auto_generate_json()
-		{
+		public static function should_auto_generate_json() {
 			// Safety guard: never auto-generate files on production.
-			if (function_exists('wp_get_environment_type') && wp_get_environment_type() === 'production') {
+			if ( function_exists( 'wp_get_environment_type' ) && 'production' === wp_get_environment_type() ) {
 				return false;
 			}
 
-			if (! function_exists('wp_get_environment_type') && defined('WP_ENVIRONMENT_TYPE') && WP_ENVIRONMENT_TYPE === 'production') {
+			if (
+				! function_exists( 'wp_get_environment_type' )
+				&& defined( 'WP_ENVIRONMENT_TYPE' )
+				&& 'production' === WP_ENVIRONMENT_TYPE
+			) {
 				return false;
 			}
 
-			if (defined('TIMBER_BLOCKS_AUTO_GENERATE')) {
-				$default = (bool) constant('TIMBER_BLOCKS_AUTO_GENERATE');
+			if ( defined( 'TIMBER_BLOCKS_AUTO_GENERATE' ) ) {
+				$default = (bool) constant( 'TIMBER_BLOCKS_AUTO_GENERATE' );
 			} else {
-				$default = defined('WP_DEBUG')
-					? (bool) constant('WP_DEBUG')
+				$default = defined( 'WP_DEBUG' )
+					? (bool) constant( 'WP_DEBUG' )
 					: false;
 			}
 
-			return (bool) apply_filters('timber/acf-gutenberg-blocks-auto-generate-json', $default);
+			return (bool) apply_filters( 'timber/acf-gutenberg-blocks-auto-generate-json', $default );
 		}
 
 		/**
@@ -859,21 +842,23 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param string $relative_dir  Relative directory path (e.g., 'views/blocks/my-block').
 		 * @return string|null Relative path to example image, or null if not found.
 		 */
-		public static function auto_detect_example_image($absolute_path, $relative_dir)
-		{
-			// Example image filenames to look for (in priority order)
-			$example_filenames = apply_filters('timber/acf-gutenberg-blocks-example-filenames', array(
-				'example.png',
-				'example.jpg',
-				'example.jpeg',
-				'example.webp',
-				'example.gif',
-			));
+		public static function auto_detect_example_image( $absolute_path, $relative_dir ) {
+			// Example image filenames to look for (in priority order).
+			$example_filenames = apply_filters(
+				'timber/acf-gutenberg-blocks-example-filenames',
+				array(
+					'example.png',
+					'example.jpg',
+					'example.jpeg',
+					'example.webp',
+					'example.gif',
+				)
+			);
 
-			foreach ($example_filenames as $filename) {
+			foreach ( $example_filenames as $filename ) {
 				$image_path = $absolute_path . '/' . $filename;
-				if (file_exists($image_path)) {
-					// Return the theme-relative path
+				if ( file_exists( $image_path ) ) {
+					// Return the theme-relative path.
 					return $relative_dir . '/' . $filename;
 				}
 			}
@@ -888,19 +873,18 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param string $slug      Block slug.
 		 * @return array|false Returns array with paths if subfolder structure, false if flat.
 		 */
-		public static function get_block_structure($directory, $slug)
-		{
-			$theme_path = get_template_directory();
-			$subfolder_path = $theme_path . '/' . $directory . '/' . $slug;
+		public static function get_block_structure( $directory, $slug ) {
+			$theme_path        = get_template_directory();
+			$subfolder_path    = $theme_path . '/' . $directory . '/' . $slug;
 			$twig_in_subfolder = $subfolder_path . '/' . $slug . '.twig';
 
-			if (is_dir($subfolder_path) && file_exists($twig_in_subfolder)) {
+			if ( is_dir( $subfolder_path ) && file_exists( $twig_in_subfolder ) ) {
 				return array(
-					'type'           => 'subfolder',
-					'directory'      => $directory . '/' . $slug,
-					'absolute_path'  => $subfolder_path,
-					'twig_file'      => $twig_in_subfolder,
-					'block_json'     => $subfolder_path . '/block.json',
+					'type'          => 'subfolder',
+					'directory'     => $directory . '/' . $slug,
+					'absolute_path' => $subfolder_path,
+					'twig_file'     => $twig_in_subfolder,
+					'block_json'    => $subfolder_path . '/block.json',
 				);
 			}
 
@@ -915,173 +899,154 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param array  $existing     Existing block.json data (if any).
 		 * @return array Block.json compatible array.
 		 */
-		public static function generate_block_json_data($file_headers, $slug, $existing = array())
-		{
+		public static function generate_block_json_data( $file_headers, $slug, $existing = array() ) {
 			$block_json = array(
-				'name'            => 'acf/' . $slug,
-				'title'           => $file_headers['title'],
-				'description'     => $file_headers['description'] ?? '',
-				'category'        => $file_headers['category'],
-				'apiVersion'      => 3,
-				'acf'             => array(
+				'name'               => 'acf/' . $slug,
+				'title'              => $file_headers['title'],
+				'description'        => $file_headers['description'] ?? '',
+				'category'           => $file_headers['category'],
+				'apiVersion'         => 3,
+				'acf'                => array(
 					'blockVersion'   => 3,
 					'mode'           => $file_headers['mode'] ?? 'preview',
 					'renderCallback' => 'Timber_Acf_Wp_Blocks::timber_blocks_callback',
 				),
-				'supports'        => array(),
+				'supports'           => array(),
 				'_generatedFromTwig' => true,
 			);
 
-			// Icon
-			if (! empty($file_headers['icon'])) {
+			if ( ! empty( $file_headers['icon'] ) ) {
 				$block_json['icon'] = $file_headers['icon'];
 			}
 
-			// Keywords
-			if (! empty($file_headers['keywords'])) {
-				$block_json['keywords'] = str_getcsv($file_headers['keywords'], ' ', '"', '\\');
+			if ( ! empty( $file_headers['keywords'] ) ) {
+				$block_json['keywords'] = str_getcsv( $file_headers['keywords'], ' ', '"', '\\' );
 			}
 
-			// Align
-			if (! empty($file_headers['align'])) {
+			if ( ! empty( $file_headers['align'] ) ) {
 				$block_json['align'] = $file_headers['align'];
 			}
 
-			// Post Types
-			if (! empty($file_headers['post_types'])) {
-				$block_json['postTypes'] = explode(' ', $file_headers['post_types']);
+			if ( ! empty( $file_headers['post_types'] ) ) {
+				$block_json['postTypes'] = explode( ' ', $file_headers['post_types'] );
 			}
 
-			// Parent blocks
-			if (! empty($file_headers['parent'])) {
-				$block_json['parent'] = str_getcsv($file_headers['parent'], ' ', '"');
+			if ( ! empty( $file_headers['parent'] ) ) {
+				$block_json['parent'] = str_getcsv( $file_headers['parent'], ' ', '"' );
 			}
 
-			// Ancestor blocks
-			if (! empty($file_headers['ancestor'])) {
-				$block_json['ancestor'] = str_getcsv($file_headers['ancestor'], ' ', '"');
+			if ( ! empty( $file_headers['ancestor'] ) ) {
+				$block_json['ancestor'] = str_getcsv( $file_headers['ancestor'], ' ', '"' );
 			}
 
-			// Uses context
-			if (! empty($file_headers['uses_context'])) {
-				$block_json['usesContext'] = explode(' ', $file_headers['uses_context']);
+			if ( ! empty( $file_headers['uses_context'] ) ) {
+				$block_json['usesContext'] = explode( ' ', $file_headers['uses_context'] );
 			}
 
-			// Provides context
-			if (! empty($file_headers['provides_context'])) {
-				$json = json_decode($file_headers['provides_context'], true);
-				if (null !== $json) {
+			if ( ! empty( $file_headers['provides_context'] ) ) {
+				$json = json_decode( $file_headers['provides_context'], true );
+				if ( null !== $json ) {
 					$block_json['providesContext'] = $json;
 				}
 			}
 
-			// Supports
 			$supports = array();
 
-			if (! empty($file_headers['supports_align'])) {
-				$supports['align'] = in_array($file_headers['supports_align'], array('true', 'false'), true)
-					? filter_var($file_headers['supports_align'], FILTER_VALIDATE_BOOLEAN)
-					: explode(' ', $file_headers['supports_align']);
+			if ( ! empty( $file_headers['supports_align'] ) ) {
+				$supports['align'] = in_array( $file_headers['supports_align'], array( 'true', 'false' ), true )
+					? filter_var( $file_headers['supports_align'], FILTER_VALIDATE_BOOLEAN )
+					: explode( ' ', $file_headers['supports_align'] );
 			}
 
-			if (! empty($file_headers['supports_align_content'])) {
-				$supports['alignContent'] = ('true' === $file_headers['supports_align_content'])
+			if ( ! empty( $file_headers['supports_align_content'] ) ) {
+				$supports['alignContent'] = ( 'true' === $file_headers['supports_align_content'] )
 					? true
-					: (('matrix' === $file_headers['supports_align_content']) ? 'matrix' : false);
+					: ( ( 'matrix' === $file_headers['supports_align_content'] ) ? 'matrix' : false );
 			}
 
-			if (! empty($file_headers['supports_mode'])) {
-				$supports['mode'] = ('true' === $file_headers['supports_mode']);
+			if ( ! empty( $file_headers['supports_mode'] ) ) {
+				$supports['mode'] = ( 'true' === $file_headers['supports_mode'] );
 			}
 
-			if (! empty($file_headers['supports_multiple'])) {
-				$supports['multiple'] = ('true' === $file_headers['supports_multiple']);
+			if ( ! empty( $file_headers['supports_multiple'] ) ) {
+				$supports['multiple'] = ( 'true' === $file_headers['supports_multiple'] );
 			}
 
-			if (! empty($file_headers['supports_anchor'])) {
-				$supports['anchor'] = ('true' === $file_headers['supports_anchor']);
+			if ( ! empty( $file_headers['supports_anchor'] ) ) {
+				$supports['anchor'] = ( 'true' === $file_headers['supports_anchor'] );
 			}
 
-			if (! empty($file_headers['supports_custom_class_name'])) {
-				$supports['customClassName'] = ('true' === $file_headers['supports_custom_class_name']);
+			if ( ! empty( $file_headers['supports_custom_class_name'] ) ) {
+				$supports['customClassName'] = ( 'true' === $file_headers['supports_custom_class_name'] );
 			}
 
-			if (! empty($file_headers['supports_reusable'])) {
-				$supports['reusable'] = ('true' === $file_headers['supports_reusable']);
+			if ( ! empty( $file_headers['supports_reusable'] ) ) {
+				$supports['reusable'] = ( 'true' === $file_headers['supports_reusable'] );
 			}
 
-			if (! empty($file_headers['supports_full_height'])) {
-				$supports['fullHeight'] = ('true' === $file_headers['supports_full_height']);
+			if ( ! empty( $file_headers['supports_full_height'] ) ) {
+				$supports['fullHeight'] = ( 'true' === $file_headers['supports_full_height'] );
 			}
 
-			if (! empty($file_headers['supports_html'])) {
-				$supports['html'] = ('true' === $file_headers['supports_html']);
+			if ( ! empty( $file_headers['supports_html'] ) ) {
+				$supports['html'] = ( 'true' === $file_headers['supports_html'] );
 			}
 
-			if (! empty($file_headers['supports_inserter'])) {
-				$supports['inserter'] = ('true' === $file_headers['supports_inserter']);
+			if ( ! empty( $file_headers['supports_inserter'] ) ) {
+				$supports['inserter'] = ( 'true' === $file_headers['supports_inserter'] );
 			}
 
-			if (! empty($file_headers['supports_lock'])) {
-				$supports['lock'] = ('true' === $file_headers['supports_lock']);
+			if ( ! empty( $file_headers['supports_lock'] ) ) {
+				$supports['lock'] = ( 'true' === $file_headers['supports_lock'] );
 			}
 
-			if (! empty($file_headers['supports_jsx'])) {
-				$supports['jsx'] = ('true' === $file_headers['supports_jsx']);
+			if ( ! empty( $file_headers['supports_jsx'] ) ) {
+				$supports['jsx'] = ( 'true' === $file_headers['supports_jsx'] );
 			}
 
-			if (! empty($supports)) {
+			if ( ! empty( $supports ) ) {
 				$block_json['supports'] = $supports;
 			} else {
-				unset($block_json['supports']);
+				unset( $block_json['supports'] );
 			}
 
-			// Enqueue style (relative path for block.json)
-			if (! empty($file_headers['enqueue_style'])) {
-				if (! filter_var($file_headers['enqueue_style'], FILTER_VALIDATE_URL)) {
-					// For block.json, use file: prefix for theme-relative paths
+			if ( ! empty( $file_headers['enqueue_style'] ) ) {
+				if ( ! filter_var( $file_headers['enqueue_style'], FILTER_VALIDATE_URL ) ) {
 					$block_json['editorStyle'] = 'file:../../' . $file_headers['enqueue_style'];
-					$block_json['style'] = 'file:../../' . $file_headers['enqueue_style'];
+					$block_json['style']       = 'file:../../' . $file_headers['enqueue_style'];
 				}
 			}
 
-			// Enqueue script (relative path for block.json)
-			if (! empty($file_headers['enqueue_script'])) {
-				if (! filter_var($file_headers['enqueue_script'], FILTER_VALIDATE_URL)) {
+			if ( ! empty( $file_headers['enqueue_script'] ) ) {
+				if ( ! filter_var( $file_headers['enqueue_script'], FILTER_VALIDATE_URL ) ) {
 					$block_json['editorScript'] = 'file:../../' . $file_headers['enqueue_script'];
-					$block_json['script'] = 'file:../../' . $file_headers['enqueue_script'];
+					$block_json['script']       = 'file:../../' . $file_headers['enqueue_script'];
 				}
 			}
 
-			// Enqueue assets callback (ACF specific)
-			if (! empty($file_headers['enqueue_assets'])) {
+			if ( ! empty( $file_headers['enqueue_assets'] ) ) {
 				$block_json['acf']['enqueueAssets'] = $file_headers['enqueue_assets'];
 			}
 
-			// Hide fields in sidebar (ACF specific).
-			if (! empty($file_headers['hide_sidebar_fields'])) {
-				$block_json['acf']['hideFieldsInSidebar'] = ('true' === $file_headers['hide_sidebar_fields']);
+			if ( ! empty( $file_headers['hide_sidebar_fields'] ) ) {
+				$block_json['acf']['hideFieldsInSidebar'] = ( 'true' === $file_headers['hide_sidebar_fields'] );
 			}
 
-			// Enable automatic inline editing (ACF specific).
-			if (! empty($file_headers['auto_inline_editing'])) {
-				$block_json['acf']['autoInlineEditing'] = ('true' === $file_headers['auto_inline_editing']);
+			if ( ! empty( $file_headers['auto_inline_editing'] ) ) {
+				$block_json['acf']['autoInlineEditing'] = ( 'true' === $file_headers['auto_inline_editing'] );
 			}
 
-			// Example image (custom extension for static preview)
-			if (! empty($file_headers['example_image'])) {
-				if (! filter_var($file_headers['example_image'], FILTER_VALIDATE_URL)) {
-					// Relative path - will need to be resolved at runtime
+			if ( ! empty( $file_headers['example_image'] ) ) {
+				if ( ! filter_var( $file_headers['example_image'], FILTER_VALIDATE_URL ) ) {
 					$block_json['acf']['exampleImage'] = $file_headers['example_image'];
 				} else {
 					$block_json['acf']['exampleImage'] = $file_headers['example_image'];
 				}
 			}
 
-			// Example data
-			if (! empty($file_headers['example'])) {
-				$json = json_decode($file_headers['example'], true);
-				if (null !== $json) {
+			if ( ! empty( $file_headers['example'] ) ) {
+				$json = json_decode( $file_headers['example'], true );
+				if ( null !== $json ) {
 					$block_json['example'] = array(
 						'attributes' => array(
 							'mode' => 'preview',
@@ -1091,26 +1056,21 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 				}
 			}
 
-			// Merge with existing, preserving extra properties from existing JSON
-			// but letting Twig headers win for properties they define
-			if (! empty($existing)) {
-				// Preserve extra properties from existing that aren't in our generated data
-				foreach ($existing as $key => $value) {
-					if (! isset($block_json[$key])) {
-						$block_json[$key] = $value;
+			if ( ! empty( $existing ) ) {
+				foreach ( $existing as $key => $value ) {
+					if ( ! isset( $block_json[ $key ] ) ) {
+						$block_json[ $key ] = $value;
 					}
 				}
 
-				// Merge supports specially to preserve extra support flags
-				if (isset($existing['supports']) && is_array($existing['supports'])) {
+				if ( isset( $existing['supports'] ) && is_array( $existing['supports'] ) ) {
 					$block_json['supports'] = array_merge(
 						$existing['supports'],
 						$block_json['supports'] ?? array()
 					);
 				}
 
-				// Merge acf settings specially
-				if (isset($existing['acf']) && is_array($existing['acf'])) {
+				if ( isset( $existing['acf'] ) && is_array( $existing['acf'] ) ) {
 					$block_json['acf'] = array_merge(
 						$existing['acf'],
 						$block_json['acf']
@@ -1129,45 +1089,39 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param array  $block_json_data Generated block.json data.
 		 * @return bool True if file was written, false otherwise.
 		 */
-		public static function maybe_write_block_json($block_json_path, $twig_file_path, $block_json_data)
-		{
-			// Check if auto-generation is enabled
-			if (! self::should_auto_generate_json()) {
+		public static function maybe_write_block_json( $block_json_path, $twig_file_path, $block_json_data ) {
+			if ( ! self::should_auto_generate_json() ) {
 				return false;
 			}
 
-			$should_write = false;
+			$should_write  = false;
 			$existing_data = array();
 
-			if (file_exists($block_json_path)) {
-				$existing_content = file_get_contents($block_json_path);
-				$existing_data = json_decode($existing_content, true);
+			if ( file_exists( $block_json_path ) ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Block metadata files live on the local filesystem.
+				$existing_content = file_get_contents( $block_json_path );
+				$existing_data    = json_decode( $existing_content, true );
 
-				// Check if this file was auto-generated and should be updated
-				if (isset($existing_data['_generatedFromTwig']) && $existing_data['_generatedFromTwig'] === true) {
-					// Check if Twig file is newer than block.json
-					if (filemtime($twig_file_path) > filemtime($block_json_path)) {
+				if ( isset( $existing_data['_generatedFromTwig'] ) && true === $existing_data['_generatedFromTwig'] ) {
+					if ( filemtime( $twig_file_path ) > filemtime( $block_json_path ) ) {
 						$should_write = true;
 					}
 				}
-				// If _generatedFromTwig is false or missing, don't overwrite (manual control)
 			} else {
-				// No block.json exists, create one
 				$should_write = true;
 			}
 
-			if ($should_write) {
-				// Re-generate with existing data to preserve extra properties
-				if (! empty($existing_data)) {
-					$block_json_data = array_merge($existing_data, $block_json_data);
-					// Ensure our flag is set
+			if ( $should_write ) {
+				if ( ! empty( $existing_data ) ) {
+					$block_json_data                       = array_merge( $existing_data, $block_json_data );
 					$block_json_data['_generatedFromTwig'] = true;
 				}
 
-				$json_content = json_encode($block_json_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-				$result = file_put_contents($block_json_path, $json_content);
+				$json_content = wp_json_encode( $block_json_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Block metadata files live on the local filesystem.
+				$result = file_put_contents( $block_json_path, $json_content );
 
-				return $result !== false;
+				return false !== $result;
 			}
 
 			return false;
@@ -1179,18 +1133,16 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 * @param string $block_json_path Path to block.json file.
 		 * @return bool True if registered successfully.
 		 */
-		public static function register_block_from_json($block_json_path)
-		{
-			if (! file_exists($block_json_path)) {
+		public static function register_block_from_json( $block_json_path ) {
+			if ( ! file_exists( $block_json_path ) ) {
 				return false;
 			}
 
-			$block_dir = dirname($block_json_path);
+			$block_dir = dirname( $block_json_path );
 
-			// register_block_type reads block.json and handles ACF blocks properly
-			$result = register_block_type($block_dir);
+			$result = register_block_type( $block_dir );
 
-			return $result !== false;
+			return false !== $result;
 		}
 
 		/**
@@ -1198,30 +1150,28 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		 *
 		 * @param string $slug Block slug.
 		 */
-		public static function trigger_flat_structure_deprecation($slug)
-		{
+		public static function trigger_flat_structure_deprecation( $slug ) {
 			self::$flat_structure_blocks[] = $slug;
 		}
 
 		/**
 		 * Handle dismissal of flat structure notice.
 		 */
-		public static function handle_flat_structure_notice_dismiss()
-		{
+		public static function handle_flat_structure_notice_dismiss() {
 			if (
-				isset($_GET['timber_dismiss_flat_notice']) &&
-				$_GET['timber_dismiss_flat_notice'] === '1' &&
-				current_user_can('manage_options')
+				isset( $_GET['timber_dismiss_flat_notice'] ) &&
+				'1' === $_GET['timber_dismiss_flat_notice'] &&
+				current_user_can( 'manage_options' )
 			) {
-				check_admin_referer('timber_dismiss_flat_notice');
+				check_admin_referer( 'timber_dismiss_flat_notice' );
 
-				// Get current flat blocks and mark them as dismissed
-				$dismissed = get_option('timber_blocks_dismissed_flat_slugs', array());
-				$dismissed = array_unique(array_merge($dismissed, self::$flat_structure_blocks));
-				update_option('timber_blocks_dismissed_flat_slugs', $dismissed);
+				$dismissed = get_option( 'timber_blocks_dismissed_flat_slugs', array() );
+				$dismissed = array_unique( array_merge( $dismissed, self::$flat_structure_blocks ) );
+				update_option( 'timber_blocks_dismissed_flat_slugs', $dismissed );
 
-				// Redirect to remove query string
-				wp_safe_redirect(remove_query_arg(array('timber_dismiss_flat_notice', '_wpnonce')));
+				wp_safe_redirect(
+					remove_query_arg( array( 'timber_dismiss_flat_notice', '_wpnonce' ) )
+				);
 				exit;
 			}
 		}
@@ -1229,41 +1179,48 @@ if (! class_exists('Timber_Acf_Wp_Blocks')) {
 		/**
 		 * Show admin notice for blocks using flat file structure.
 		 */
-		public static function show_flat_structure_notice()
-		{
-			// Only show in debug mode and to admins
-			if (! defined('WP_DEBUG') || ! WP_DEBUG || ! current_user_can('manage_options')) {
+		public static function show_flat_structure_notice() {
+			// Only show in debug mode and to admins.
+			if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG || ! current_user_can( 'manage_options' ) ) {
 				return;
 			}
 
-			// Get dismissed blocks
-			$dismissed = get_option('timber_blocks_dismissed_flat_slugs', array());
+			$dismissed = get_option( 'timber_blocks_dismissed_flat_slugs', array() );
 
-			// Filter out already dismissed blocks
-			$new_flat_blocks = array_diff(self::$flat_structure_blocks, $dismissed);
+			$new_flat_blocks = array_diff( self::$flat_structure_blocks, $dismissed );
 
-			if (empty($new_flat_blocks)) {
+			if ( empty( $new_flat_blocks ) ) {
 				return;
 			}
 
 			$dismiss_url = wp_nonce_url(
-				add_query_arg('timber_dismiss_flat_notice', '1'),
+				add_query_arg( 'timber_dismiss_flat_notice', '1' ),
 				'timber_dismiss_flat_notice'
 			);
 
-			$block_list = '<code>' . implode('</code>, <code>', array_map('esc_html', $new_flat_blocks)) . '</code>';
+			$block_list = '<code>' . implode(
+				'</code>, <code>',
+				array_map( 'esc_html', $new_flat_blocks )
+			) . '</code>';
 
 			echo '<div class="notice notice-warning">';
-			echo '<p><strong>Timber ACF Blocks:</strong> The following blocks use the legacy flat file structure: ' . $block_list . '</p>';
-			echo '<p>Consider migrating to the subfolder structure with <code>block.json</code> for better performance and compatibility. ';
-			echo '<a href="https://kevin-terry.github.io/timber-acf-wp-blocks/#/block-json" target="_blank">View migration guide →</a></p>';
-			echo '<p><a href="' . esc_url($dismiss_url) . '">Dismiss this notice</a></p>';
+			echo wp_kses_post(
+				'<p><strong>Timber ACF Blocks:</strong> The following blocks use the legacy flat file structure: ' .
+					$block_list .
+					'</p>'
+			);
+			echo '<p>Consider migrating to the subfolder structure with <code>block.json</code> ';
+			echo 'for better performance and compatibility. ';
+			echo '<a href="https://kevin-terry.github.io/timber-acf-wp-blocks/#/block-json" ';
+			echo 'target="_blank">';
+			echo 'View migration guide →</a></p>';
+			echo '<p><a href="' . esc_url( $dismiss_url ) . '">Dismiss this notice</a></p>';
 			echo '</div>';
 		}
 	}
 }
 
-if (is_callable('add_action')) {
+if ( is_callable( 'add_action' ) ) {
 	add_action(
 		'after_setup_theme',
 		function () {

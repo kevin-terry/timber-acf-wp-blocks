@@ -533,7 +533,17 @@ if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 				return $metadata;
 			}
 
+			$internal_render_template = self::get_auto_inline_render_template_path();
+
 			if ( empty( $metadata['acf']['autoInlineEditing'] ) ) {
+				if (
+					isset( $metadata['acf']['renderTemplate'] )
+					&& $internal_render_template === $metadata['acf']['renderTemplate']
+				) {
+					unset( $metadata['acf']['renderTemplate'] );
+					$metadata['acf']['renderCallback'] = 'Timber_Acf_Wp_Blocks::timber_blocks_callback';
+				}
+
 				return $metadata;
 			}
 
@@ -544,7 +554,7 @@ if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 				return $metadata;
 			}
 
-			$metadata['acf']['renderTemplate'] = self::get_auto_inline_render_template_path();
+			$metadata['acf']['renderTemplate'] = $internal_render_template;
 			unset( $metadata['acf']['renderCallback'] );
 
 			return $metadata;

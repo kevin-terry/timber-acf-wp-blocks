@@ -101,10 +101,18 @@ This flag controls regeneration behavior:
 
 When regenerating `block.json`, the plugin:
 
-- **Overwrites** properties defined in your Twig headers
-- **Preserves** extra properties you've added manually to the JSON
+- Treats supported Twig headers as the source of truth for the properties they generate
+- **Removes or resets** generated properties when you remove the corresponding Twig header
+- **Preserves** extra manual properties that are not supported by Twig header generation
 
-This allows you to add advanced block.json features not supported by Twig headers while still benefiting from auto-generation.
+This allows you to add advanced `block.json` features not supported by Twig headers while still benefiting from auto-generation.
+
+In practice this means:
+
+- If a property such as `icon`, `example`, `supports.align`, or `acf.hideFieldsInSidebar` came from Twig headers and you remove that header later, the generated `block.json` will drop or reset that property on the next regeneration.
+- If you add unsupported extras manually, such as `attributes`, `variations`, `supports.spacing`, or custom `acf` keys, those manual additions are preserved.
+
+This keeps Twig-managed properties accurate without wiping unsupported manual `block.json` customizations.
 
 ## Migration Guide
 

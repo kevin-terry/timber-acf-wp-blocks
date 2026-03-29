@@ -906,11 +906,13 @@ if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 		 *
 		 * @param array  $file_headers Parsed headers from Twig file.
 		 * @param string $slug         Block slug.
-		 * @param array  $existing     Existing block.json data (if any).
+		 * @param array  $existing     Existing block.json data used to preserve unsupported manual properties.
 		 * @return array Block.json compatible array.
 		 */
 		public static function generate_block_json_data( $file_headers, $slug, $existing = array() ) {
 			$block_json = array(
+				// Keep this first so generated files clearly show their source of truth.
+				'_generatedFromTwig' => true,
 				'name'               => 'acf/' . $slug,
 				'title'              => $file_headers['title'],
 				'description'        => $file_headers['description'] ?? '',
@@ -922,7 +924,6 @@ if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 					'renderCallback' => 'Timber_Acf_Wp_Blocks::timber_blocks_callback',
 				),
 				'supports'           => array(),
-				'_generatedFromTwig' => true,
 			);
 
 			if ( ! empty( $file_headers['icon'] ) ) {
@@ -1066,29 +1067,154 @@ if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 				}
 			}
 
-			if ( ! empty( $existing ) ) {
-				foreach ( $existing as $key => $value ) {
-					if ( ! isset( $block_json[ $key ] ) ) {
-						$block_json[ $key ] = $value;
+			$block_json = self::merge_preserved_block_json_properties( $block_json, $existing );
+
+			return $block_json;
+		}
+
+		/**
+		 * Preserve unsupported manual block.json properties while keeping Twig-managed keys authoritative.
+		 *
+		 * @param array $block_json Generated block.json data.
+		 * @param array $existing   Existing block.json data.
+		 * @return array
+		 */
+		private static function merge_preserved_block_json_properties( $block_json, $existing ) {
+			if ( empty( $existing ) || ! is_array( $existing ) ) {
+				return $block_json;
+			}
+
+			$managed_top_level_keys = self::get_managed_block_json_keys();
+
+			foreach ( $existing as $key => $value ) {
+				if ( 'supports' === $key && is_array( $value ) ) {
+					$supports = self::merge_preserved_nested_block_json_properties(
+						isset( $block_json['supports'] ) && is_array( $block_json['supports'] )
+							? $block_json['supports']
+							: array(),
+						$value,
+						self::get_managed_block_json_support_keys()
+					);
+
+					if ( ! empty( $supports ) ) {
+						$block_json['supports'] = $supports;
+					} else {
+						unset( $block_json['supports'] );
 					}
+
+					continue;
 				}
 
-				if ( isset( $existing['supports'] ) && is_array( $existing['supports'] ) ) {
-					$block_json['supports'] = array_merge(
-						$existing['supports'],
-						$block_json['supports'] ?? array()
+				if ( 'acf' === $key && is_array( $value ) ) {
+					$block_json['acf'] = self::merge_preserved_nested_block_json_properties(
+						isset( $block_json['acf'] ) && is_array( $block_json['acf'] )
+							? $block_json['acf']
+							: array(),
+						$value,
+						self::get_managed_block_json_acf_keys()
 					);
+
+					continue;
 				}
 
-				if ( isset( $existing['acf'] ) && is_array( $existing['acf'] ) ) {
-					$block_json['acf'] = array_merge(
-						$existing['acf'],
-						$block_json['acf']
-					);
+				if ( in_array( $key, $managed_top_level_keys, true ) ) {
+					continue;
 				}
+
+				$block_json[ $key ] = $value;
 			}
 
 			return $block_json;
+		}
+
+		/**
+		 * Preserve unsupported manual properties inside a managed block.json object.
+		 *
+		 * @param array $generated     Generated nested data.
+		 * @param array $existing      Existing nested data.
+		 * @param array $managed_keys  Keys controlled by Twig header generation.
+		 * @return array
+		 */
+		private static function merge_preserved_nested_block_json_properties( $generated, $existing, $managed_keys ) {
+			foreach ( $existing as $key => $value ) {
+				if ( in_array( $key, $managed_keys, true ) ) {
+					continue;
+				}
+
+				$generated[ $key ] = $value;
+			}
+
+			return $generated;
+		}
+
+		/**
+		 * Get top-level block.json keys managed by Twig header generation.
+		 *
+		 * @return array
+		 */
+		private static function get_managed_block_json_keys() {
+			return array(
+				'name',
+				'title',
+				'description',
+				'category',
+				'apiVersion',
+				'acf',
+				'supports',
+				'_generatedFromTwig',
+				'icon',
+				'keywords',
+				'align',
+				'postTypes',
+				'parent',
+				'ancestor',
+				'usesContext',
+				'providesContext',
+				'editorStyle',
+				'style',
+				'editorScript',
+				'script',
+				'example',
+			);
+		}
+
+		/**
+		 * Get supports keys managed by Twig header generation.
+		 *
+		 * @return array
+		 */
+		private static function get_managed_block_json_support_keys() {
+			return array(
+				'align',
+				'alignContent',
+				'mode',
+				'multiple',
+				'anchor',
+				'customClassName',
+				'reusable',
+				'fullHeight',
+				'html',
+				'inserter',
+				'lock',
+				'jsx',
+			);
+		}
+
+		/**
+		 * Get ACF keys managed by Twig header generation.
+		 *
+		 * @return array
+		 */
+		private static function get_managed_block_json_acf_keys() {
+			return array(
+				'blockVersion',
+				'mode',
+				'renderCallback',
+				'enqueueAssets',
+				'hideFieldsInSidebar',
+				'autoInlineEditing',
+				'exampleImage',
+			);
 		}
 
 		/**
@@ -1122,10 +1248,7 @@ if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 			}
 
 			if ( $should_write ) {
-				if ( ! empty( $existing_data ) ) {
-					$block_json_data                       = array_merge( $existing_data, $block_json_data );
-					$block_json_data['_generatedFromTwig'] = true;
-				}
+				$block_json_data['_generatedFromTwig'] = true;
 
 				$json_content = wp_json_encode( $block_json_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
 				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Block metadata files live on the local filesystem.

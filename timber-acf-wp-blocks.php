@@ -1058,6 +1058,7 @@ if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 			if ( ! empty( $file_headers['example'] ) ) {
 				$json = json_decode( $file_headers['example'], true );
 				if ( null !== $json ) {
+					$json['is_example'] = true;
 					$block_json['example'] = array(
 						'attributes' => array(
 							'mode' => 'preview',

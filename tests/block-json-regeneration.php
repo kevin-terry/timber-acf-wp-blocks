@@ -76,6 +76,22 @@ $headers_with_example = array_merge(
 
 $generated_with_example = Timber_Acf_Wp_Blocks::generate_block_json_data( $headers_with_example, 'validation-block', $existing );
 
+$settings_with_example_image = Timber_Acf_Wp_Blocks::add_block_json_example_image_support(
+	array(),
+	array(
+		'acf' => array(
+			'exampleImage' => 'assets/images/examples/validation-block.png',
+		),
+	)
+);
+
+$settings_without_example_image = Timber_Acf_Wp_Blocks::add_block_json_example_image_support(
+	array( 'supports' => array( 'mode' => true ) ),
+	array(
+		'acf' => array(),
+	)
+);
+
 assert_test( 'acf/validation-block' === $generated['name'], 'Generated block name is incorrect.' );
 assert_test( ! isset( $generated['icon'] ), 'Managed top-level keys removed from Twig should not be preserved.' );
 assert_test( ! isset( $generated['example'] ), 'Managed example data removed from Twig should not be preserved.' );
@@ -92,6 +108,8 @@ assert_test( isset( $generated_with_example['example'] ), 'Generated block.json 
 assert_test( 'preview' === $generated_with_example['example']['attributes']['mode'], 'Generated example data should remain in preview mode.' );
 assert_test( 'Preview headline' === $generated_with_example['example']['attributes']['data']['headline'], 'Generated example data should preserve the Twig Example payload.' );
 assert_test( true === $generated_with_example['example']['attributes']['data']['is_example'], 'Generated block.json example data should include the is_example flag for render parity.' );
+assert_test( 'assets/images/examples/validation-block.png' === $settings_with_example_image['example_image'], 'block.json exampleImage should map to the example_image setting ACF preserves.' );
+assert_test( ! isset( $settings_without_example_image['example_image'] ), 'Blocks without an exampleImage should not gain an example_image setting.' );
 
 $twig_fixture = tempnam( sys_get_temp_dir(), 'timber-twig-' );
 $json_fixture = tempnam( sys_get_temp_dir(), 'timber-json-' );

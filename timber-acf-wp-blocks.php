@@ -51,6 +51,12 @@ if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 					'block_type_metadata',
 					array( __CLASS__, 'maybe_swap_to_render_template_for_auto_inline_editing' )
 				);
+				add_filter(
+					'block_type_metadata_settings',
+					array( __CLASS__, 'add_block_json_example_image_support' ),
+					20,
+					2
+				);
 				add_action( 'acf/init', array( __CLASS__, 'timber_block_init' ), 10, 0 );
 				add_action( 'admin_init', array( __CLASS__, 'handle_flat_structure_notice_dismiss' ) );
 				add_action( 'admin_notices', array( __CLASS__, 'show_flat_structure_notice' ) );
@@ -428,12 +434,9 @@ if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 
 			$example_image = null;
 			if ( ! empty( $block['example_image'] ) ) {
-				$example_image = $block['example_image'];
+				$example_image = self::normalize_example_image_path( $block['example_image'] );
 			} elseif ( ! empty( $block['acf']['exampleImage'] ) ) {
-				$example_image = $block['acf']['exampleImage'];
-				if ( ! filter_var( $example_image, FILTER_VALIDATE_URL ) ) {
-					$example_image = get_template_directory_uri() . '/' . $example_image;
-				}
+				$example_image = self::normalize_example_image_path( $block['acf']['exampleImage'] );
 			}
 
 			if ( $is_example && ! empty( $example_image ) ) {
@@ -481,6 +484,27 @@ if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 			$paths = self::timber_acf_path_render( $slug, $is_preview, $is_example );
 
 			Timber::render( $paths, $context );
+		}
+
+		/**
+		 * Map package-specific block.json example images into a setting ACF preserves.
+		 *
+		 * @param array $settings Compiled block settings.
+		 * @param array $metadata Raw block metadata.
+		 * @return array
+		 */
+		public static function add_block_json_example_image_support( $settings, $metadata ) {
+			if ( empty( $metadata['acf'] ) || ! is_array( $metadata['acf'] ) ) {
+				return $settings;
+			}
+
+			if ( empty( $metadata['acf']['exampleImage'] ) ) {
+				return $settings;
+			}
+
+			$settings['example_image'] = $metadata['acf']['exampleImage'];
+
+			return $settings;
 		}
 
 		/**
@@ -650,6 +674,24 @@ if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 		 */
 		private static function get_auto_inline_render_template_path() {
 			return __DIR__ . '/timber-acf-wp-blocks-render-template.php';
+		}
+
+		/**
+		 * Normalize an example image value to an absolute URL when possible.
+		 *
+		 * @param mixed $example_image Example image path or URL.
+		 * @return string|null
+		 */
+		private static function normalize_example_image_path( $example_image ) {
+			if ( ! is_string( $example_image ) || '' === $example_image ) {
+				return null;
+			}
+
+			if ( filter_var( $example_image, FILTER_VALIDATE_URL ) ) {
+				return $example_image;
+			}
+
+			return untrailingslashit( get_template_directory_uri() ) . '/' . ltrim( $example_image, '/' );
 		}
 
 		/**

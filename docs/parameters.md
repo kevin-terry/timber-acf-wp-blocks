@@ -40,6 +40,22 @@ When creating blocks, you can include any of the following parameters.
 #}
 ```
 
+## Alignment
+
+### Align
+
+`Align` sets the block's default alignment.
+
+When your Twig template outputs `{{ classes }}`, the package appends `alignfull`, `alignwide`, and similar classes from the saved block alignment, or from the `Align` header when the block has no saved align value yet.
+
+Leave `Align` blank or set it to `none` to omit an alignment class.
+
+### SupportsAlign
+
+Controls which alignment options are available in the editor UI.
+
+This does not disable the default alignment class generated from `Align`.
+
 ## Additional Support Flags
 
 ### InlineEditableFields

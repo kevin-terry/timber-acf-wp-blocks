@@ -468,11 +468,12 @@ if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 			$context['inner_content'] = $content;
 			$context['wp_block']      = $wp_block;
 			$context['block_context'] = $block_context;
+			$effective_align          = self::resolve_block_align( $block );
 			$classes                  = array_merge(
 				array( $slug ),
 				isset( $block['className'] ) ? array( $block['className'] ) : array(),
 				$is_preview ? array( 'is-preview' ) : array(),
-				! empty( $context['block']['align'] ) ? array( 'align' . $context['block']['align'] ) : array()
+				null !== $effective_align ? array( 'align' . $effective_align ) : array()
 			);
 
 			$context['classes'] = implode( ' ', $classes );
@@ -614,11 +615,71 @@ if ( ! class_exists( 'Timber_Acf_Wp_Blocks' ) ) {
 		 */
 		private static function store_block_runtime_settings( $slug, $file_headers ) {
 			self::$block_runtime_settings[ self::normalize_block_name( $slug ) ] = array(
+				'default_align'          => self::normalize_block_align_value(
+					isset( $file_headers['align'] ) ? $file_headers['align'] : null
+				),
 				'inline_editable_fields' => self::parse_space_separated_header(
 					$file_headers,
 					'inline_editable_fields'
 				),
 			);
+		}
+
+		/**
+		 * Resolve the effective alignment for a block.
+		 *
+		 * Saved block alignment wins when present. Otherwise fall back to the
+		 * default align declared in the Twig header metadata.
+		 *
+		 * @param array $block Current block data.
+		 * @return string|null
+		 */
+		private static function resolve_block_align( $block ) {
+			if ( ! is_array( $block ) ) {
+				return null;
+			}
+
+			if ( array_key_exists( 'align', $block ) ) {
+				$raw_align = $block['align'];
+
+				if ( is_string( $raw_align ) && 'none' === strtolower( trim( $raw_align ) ) ) {
+					return null;
+				}
+
+				$runtime_align = self::normalize_block_align_value( $raw_align );
+
+				if ( null !== $runtime_align ) {
+					return $runtime_align;
+				}
+			}
+
+			$block_name = ! empty( $block['name'] ) ? self::normalize_block_name( $block['name'] ) : '';
+
+			if ( '' === $block_name || empty( self::$block_runtime_settings[ $block_name ]['default_align'] ) ) {
+				return null;
+			}
+
+			return self::$block_runtime_settings[ $block_name ]['default_align'];
+		}
+
+		/**
+		 * Normalize an align value into the class suffix used at render time.
+		 *
+		 * @param mixed $align Align value from a block instance or Twig header.
+		 * @return string|null
+		 */
+		private static function normalize_block_align_value( $align ) {
+			if ( ! is_string( $align ) ) {
+				return null;
+			}
+
+			$align = strtolower( trim( $align ) );
+
+			if ( '' === $align || 'none' === $align ) {
+				return null;
+			}
+
+			return $align;
 		}
 
 		/**
